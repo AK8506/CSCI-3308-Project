@@ -1,0 +1,16 @@
+Scribe: Lance Kluge
+
+Went over a pull request that Lance had made.
+
+Noted that both Julia and Josh were not added as collaborators to the github repo and that issue was resolved in the meeting
+
+Discussed if we were going to be splitting up workloads into frontend vs backend or per feature. Ended up tentatively deciding to try and split it
+up front and backend.
+
+Went over preferences about Front vs backend and decided to start that Lance, Julia, and Akshay will start on backend while Thomas and Josh will initially
+start on the frontend.
+
+Discussed the where to start for the application. Came up with the user login and user register page. Talked about needing to design the database
+before we start designing the rest of the system. User table, mountain table, reviews table. 
+
+Figured out that we don't really know what is supposed to be in milestone submissions, plan on asking TA during meeting in 5 minutes.
