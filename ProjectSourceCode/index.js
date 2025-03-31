@@ -55,4 +55,45 @@ app.get('/', (req, res) => {
   res.render('pages/home');
 });
 
+app.get('/reviews', (req, res) => {
+  const mountain_name = req.query.mountain_name;
+  const query = `select * from reviews where review_id in 
+    (select review_id from mountains_to_reviews where mountain_id = 
+    (select mountain_id from mountains where mountain_name = $1))
+    order by date_posted desc;`
+
+  const values = [mountain_name];
+  db.any(query, values)
+    .then(data => {
+      res.status(200).json({
+        data: data,
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+  });
+
+  
+app.get('/review_images', (req, res) => {
+  const review_id = req.query.review_id;
+  const query = `select * from images where image_id in 
+    (select image_id from reviews_to_images where review_id = $1)`
+
+  const values = [review_id];
+  db.any(query, values)
+    .then(data => {
+      res.status(200).json({
+        data: data,
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+  });
+
 app.listen(3000);
