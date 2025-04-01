@@ -51,3 +51,17 @@ INSERT INTO reviews_to_images
     (
         2, 4
     );   
+
+INSERT INTO passes 
+    (pass_name)
+    VALUES
+    (
+        'Test pass 1'
+    );
+
+INSERT INTO mountains_to_passes 
+    (mountain_id, pass_id)
+    VALUES
+    (
+        1,1
+    );
