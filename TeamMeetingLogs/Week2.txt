@@ -1,0 +1,17 @@
+Scribe: Akshay Patnaik
+
+Brought up a comment on Lance’s pull request:
+    - Open to restructuring database for more flexibility by adding a separate table for passes. 
+    - Wanted fluidity with various mountains potentially having different types of passes varying 
+      from the norm.
+    - More discussion and thinking needed for anything to change, not finalized.
+
+Addressed that our database does not accommodate for external weather API calls: 
+    - Decided that we should wait to implement since we don’t know what specific datapoints we 
+      need/want to show 
+    - Should keep in mind for the future since we have not found a weather API to implement
+
+Discussed how to store images:
+    - Store in the database either by URL or uploading the file itself to a directory. 
+    - Decided that storing the files on a directory is okay to do
+    - Need to figure out how to store/access images in a database with filepaths instead of URLs.
