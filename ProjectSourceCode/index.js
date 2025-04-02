@@ -140,6 +140,33 @@ app.use(auth);
 
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 
+// -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
+
+app.get('/mountain', (req, res) => {
+  res.render('pages/mountain', {
+    user: req.session.user,
+  });
+});
+
+// Path for user to post a review of a mountain
+app.post('/mountain', (req, res) => {
+  const username = req.session.user.username;
+  const review = req.body.review;
+  const date_posted = new Date();
+  const rating = req.body.rating;
+  const query = 'INSERT INTO reviews(username, review ,date_posted, rating) VALUES($1, $2, $3, $4)';
+
+  db.none(query, [username, review, date_posted, rating])
+    .then(() => {
+      console.log('Review posted successfully');
+      res.render('pages/mountain', { message: 'Review posted successfully' });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.render('pages/mountain', { message: 'Error posting review' });
+    });
+});
+
 // -------------------------------------  START THE SERVER   ---------------------------------------
 
 app.listen(3000);
