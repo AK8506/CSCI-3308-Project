@@ -15,6 +15,7 @@ const hbs = handlebars.create({
   partialsDir: __dirname + '/src/views/partials',
 });
 
+
 // database configuration
 const dbConfig = {
   host: 'db', // the database server
