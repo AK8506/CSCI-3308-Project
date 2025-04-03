@@ -55,10 +55,10 @@ DROP TABLE IF EXISTS mountains_to_passes;
 CREATE TABLE mountains_to_passes (
   mountain_id INT NOT NULL,
   pass_id INT NOT NULL
-)
+);
 
 DROP TABLE IF EXISTS passes;
 CREATE TABLE passes (
   pass_id SERIAL PRIMARY KEY,
   pass_name VARCHAR(50)
-)
+);
