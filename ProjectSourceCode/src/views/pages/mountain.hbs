@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOUNTAIN NAME</title>
-
+    <script src="./src/views/pages/stars.js"></script>
 </head>
 <body>
+   
     <div class = "p-3 mb-2 bg-primary text-white">
         <div class="card text-center mb-3" style="max-width: fit-content; margin-left: auto;margin-right: auto;">
             <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625" class="card-img-top" alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
@@ -19,27 +20,10 @@
                 <div class="container mt-4">
                     <div id="star-rating" class="star-rating"></div>
                 </div>
+                <script> setStarRating(2.5);</script>
 
-            <script>
-                function setStarRating(rating) {
-                    const starContainer = document.getElementById('star-rating');
-                    starContainer.innerHTML = '';
-                    for (let i = 0; i < Math.floor(rating); i++) {
-                        starContainer.innerHTML += '<i class="fa-solid fa-star fa-2xl" style="color: #FFD43B;"></i>';
-                    }
-                    if (rating % 1 !== 0) {
-                        starContainer.innerHTML += '<i class="fa-solid fa-star-half-stroke fa-2xl" style="color: #FFD43B;"></i>';
-                    }
-                    for (let i = 0; i < 5 - Math.floor(rating) - (rating % 1 !== 0); i++) {
-                        starContainer.innerHTML += '<i class="fa-regular fa-star fa-2xl" style="color: #FFD43B;"></i>';
-                    }
-                }
-                setStarRating(2.5);
-            </script>
-                
             </div>
         </div>
     </div>
-
 </body>
 </html>

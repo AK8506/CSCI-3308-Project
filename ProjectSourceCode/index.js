@@ -49,7 +49,7 @@ app.use(
     extended: true,
   })
 );
-
+app.use(express.static(__dirname + '/'));
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 app.get('/', (req, res) => {
