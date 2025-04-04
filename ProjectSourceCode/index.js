@@ -140,6 +140,11 @@ const auth = (req, res, next) => {
 app.use(auth);
 
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
+app.get('/logout', (req, res) => {
+    req.session.destroy(function (err) {
+      res.render('pages/logout');
+    });
+  });
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 
