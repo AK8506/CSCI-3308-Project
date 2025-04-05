@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOUNTAIN NAME</title>
     <script src="./src/views/pages/stars.js"></script>
+    <style>
+        .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        }
+    </style>
 </head>
 <body>
 
     <div class = "p-3 mb-2 bg-primary text-white">
         <div class="card text-center mb-3" style="max-width: fit-content; margin-left: auto;margin-right: auto;">
-            <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625" class="card-img-top" alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
+            <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625"  alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
             <div class="card-body">
                 <h5 class="card-title">TEST MOUNTAIN</h5>
                 <p class="text">LOCATION: TEST MOUNTAIN LOCATION</p>
@@ -18,12 +24,43 @@
                 <p class="text">MAX ELEVATION: TEST MOUNTAIN MAX ELEVATION</p>
                 
                 <div class="container mt-4">
-                    <div id="star-rating" class="star-rating"></div>
+                    <div id="overall-star-rating" class="star-rating"></div>
                 </div>
-                <script> setStarRating(2.5);</script>
+                <script> setStarRating_xl(2.5, 'overall-star-rating');</script>
 
             </div>
         </div>
     </div>
+    <div class="container mt-4">
+    <div class="d-flex flex-row justify-content-center gap-3 flex-wrap">
+      <div class="card text-center mb-3" style="width: 18rem;">
+        <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
+        <div class="card-body">
+          <h5 class="card-title">Lifts and Infrastructure</h5>
+          <div id="lift-star-rating" class="star-rating"></div>
+          <script> setStarRating_large(3.5, 'lift-star-rating');</script>
+        </div>
+      </div>
+
+      <div class="card text-center mb-3" style="width: 18rem;">
+        <img src="https://images.squarespace-cdn.com/content/v1/5e7a324590664f18b1bfea0c/1699319261524-Y4NXLAKXYFO6VZBEKJG5/kickinghorset1ridge.jpeg" class="card-img-top" alt="Difficulty">
+        <div class="card-body">
+          <h5 class="card-title">Difficulty</h5>
+          <div id="difficulty-star-rating" class="star-rating"></div>
+          <script> setStarRating_large(4.5, 'difficulty-star-rating');</script>
+        </div>
+      </div>
+
+      <div class="card text-center mb-3" style="width: 18rem;">
+        <img src="https://snowbrains.com/wp-content/uploads/2023/01/faceshots-alta-ski-area-fb.jpg" class="card-img-top" alt="Snow Quality">
+        <div class="card-body">
+          <h5 class="card-title">Snow Quality</h5>
+          <div id="snow-star-rating" class="star-rating"></div>
+          <script> setStarRating_large(4, 'snow-star-rating');</script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
