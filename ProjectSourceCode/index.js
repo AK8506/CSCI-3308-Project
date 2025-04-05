@@ -42,7 +42,7 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
-
+app.use(express.static(__dirname + '/'));
 
 app.use(
   bodyParser.urlencoded({
@@ -56,16 +56,32 @@ app.get('/', (req, res) => {
   res.render('pages/home');
 });
 
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
 
 app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
+app.get('/test', (req, res) => {
+  res.status(302).redirect('/login');
+});
+
 app.post('/register', async (req, res) => {
   const username = req.body.username;
+  const email = req.body.email;
   const password = req.body.password;
-
+  if(username == null) {
+    console.log('null');
+    res.status(400).render('pages/register', {message: 'username cannot be null'});
+  } else {
   // check if username already exists
   const query = 'SELECT * FROM users WHERE username = $1';
   db.oneOrNone(query, [username])
@@ -78,29 +94,35 @@ app.post('/register', async (req, res) => {
         const hash = await bcrypt.hash(password, 10);
 
         // Insert username and hashed password into the 'users' table
-        const insertQuery = 'INSERT INTO users(username, password) VALUES($1, $2)';
-        db.none(insertQuery, [username, hash])
+        const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
+        db.none(insertQuery, [username, email, hash])
           .then(() => {
-            res.render('pages/register', { message: 'Account created.' });
+            res.status(200).render('pages/register', { message: 'Account created.' });
           })
           .catch((err) => {
             console.log(err);
+            res.status(400).json ({
+              error: err
+            });
             res.render('pages/register', { message: 'Error creating account.' });
           });
       }
     })
     .catch((err) => {
       console.log(err);
-      res.render('pages/register', { message: 'Error checking account.' });
+      res.status(400).json({
+        error: err,
+        message: "bottom error"
+      });
+      res.render('pages/register', { message: 'Error creating account.' });
     });
+  }
 });
 
 
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
-app.post('/login', (req, res) => {
-  req.render('pages/login');
-});
+
 
 app.post('/login', async (req, res) => {
   const username = req.body.username;
@@ -117,6 +139,7 @@ app.post('/login', async (req, res) => {
         req.session.user = user;
         res.session.save();
         res.redirect('/home'); // redirect to home page
+        res.status(200)
       } else {
         console.log('Password is incorrect');
         res.render('pages/login', { message: 'Password is incorrect' }); // make a messages.hbs file
@@ -143,4 +166,4 @@ app.use(auth);
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 
-app.listen(3000);
+module.exports = app.listen(3000);
