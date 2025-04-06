@@ -26,10 +26,10 @@ INSERT INTO mountains
     (mountain_name, location_name, latitude, longitude, pass, avg_rating, peak_elevation)
     VALUES
     (
-        'TestMT', 'Testing City', 31.11, 32.011, 'Epic', 3.5, 12000
+        'TestMT', 'Testing City', 45, -116, 'Epic', 3.5, 12000
     ),
     (
-        'TestMT2', 'Testing City2', 50.01, -110.00, 'Ikon', 4.2, 15000
+        'TestMT2', 'Testing City2', 36.01, -106.7, 'Ikon', 4.2, 15000
     );
 
 INSERT INTO images

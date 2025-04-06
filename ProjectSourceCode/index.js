@@ -7,6 +7,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session'); 
 const bcrypt = require('bcryptjs');
+const axios = require('axios'); 
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -94,6 +95,137 @@ app.get('/review_images', (req, res) => {
         error: err,
       });
     });
+  });
+
+  
+app.post('/update_weather', (req, res) => {
+  // This function inserts weather data into the database for the mountain given in the parameters
+  // TODO figure out how to do this hourly and delete data when no longer necessary
+  var mountain_name = req.body.mountain_name;
+  // First get NWS zone from database
+  var query = `select nws_zone from mountains where mountain_name = $1`
+  var values = [mountain_name];
+  db.one(query, values)
+    .then(data => {
+      var nws_zone = data.nws_zone;
+      // Now get observations from NWS api
+      axios({
+        url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
+        method: 'GET'
+      }).then(results => {
+        // Now update weather table TODO handle error of NWS data missing any of these fields
+        var observation = results.data.features[0].properties;
+        var time = observation.timestamp;
+        var temperature = observation.temperature.value;
+        var wind_speed = observation.windSpeed.value;
+        var wind_direction = observation.windDirection.value;
+        var wind_gust = observation.windGust.value;
+        var pressure = observation.barometricPressure.value;
+        var humidity = observation.relativeHumidity.value;
+        var description = observation.textDescription;
+        var min_temp = observation.minTemperatureLast24Hours.value;
+        var max_temp = observation.maxTemperatureLast24Hours.value;
+        var prec_last_hour = observation.precipitationLastHour.value;
+        var prec_last_3_hours = observation.precipitationLast3Hours.value;
+        var prec_last_6_hours = observation.precipitationLast6Hours.value;
+        
+        query = `INSERT INTO weather
+    (nws_zone, observation_time, temperature, pressure, humidity, description,
+    max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
+     precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
+    VALUES
+    (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    ) returning *;`
+    values = [nws_zone, time, temperature, pressure, humidity, description, max_temp, min_temp, prec_last_hour,
+      prec_last_3_hours, prec_last_6_hours, wind_speed, wind_gust, wind_direction];
+    db.one(query, values)
+    .then(data => {
+      res.status(200).json({
+        data: data,
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        message: 'Error inserting weather into db',
+        error: err,
+      });
+    });
+       
+      })
+      .catch(err => {
+        res.status(400).json({
+          message: 'Error getting observations from NWS api' +  ' https://api.weather.gov/zones/forecast/' + nws_zone + '/observations',
+          error: err,
+        });
+      });
+
+    })
+    .catch(err => {
+      res.status(400).json({
+        message: 'Error retrieving NWS zone from mountains table',
+        error: err,
+      });
+    })
+  
+  });
+
+  
+app.post('/update_nws_zone', (req, res) => {
+  // This function updates the NWS zone stored in the database for the mountain given in the parameters
+  // TODO figure out how to do this periodically (and maybe whenever admin user adds mountain)
+  var mountain_name = req.body.mountain_name;
+
+  // First get latitude and longitude from database
+  var query = `select latitude, longitude, mountain_id from mountains where mountain_name = $1`
+  var values = [mountain_name];
+
+  db.one(query, values)
+    .then(data => {
+      var lat = data.latitude;
+      var long = data.longitude;
+      var mountain_id = data.mountain_id;
+      
+      // Now call National Weather Service API to get zone
+      axios({
+        url: 'https://api.weather.gov/points/' + lat + ',' + long,
+        method: 'GET'
+      }).then(results => {
+        var zone = results.data.properties.forecastZone;
+        zone = zone.split('forecast/')[1];
+         // Finally update in our db
+        var query = `update mountains set nws_zone = $1 where mountain_id = $2 returning *`
+        var values = [zone, mountain_id];
+        db.one(query, values)
+        .then(data => {
+          res.status(200).json({
+            data: data,
+          });
+  
+        })
+        .catch(err => {
+          res.status(400).json({
+            message: 'Error updating zone in mountains table',
+            error: err,
+          });
+        });
+       
+      })
+      .catch(err => {
+        res.status(400).json({
+          message: 'Error getting zone from NWS',
+          error: err,
+        });
+      });
+  
+    })
+    .catch(err => {
+      res.status(400).json({
+        message: 'Error getting lat/long from db',
+        error: err,
+      });
+    });
+
   });
 
 app.listen(3000);
