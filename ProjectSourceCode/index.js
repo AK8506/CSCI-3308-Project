@@ -116,18 +116,66 @@ app.post('/update_weather', (req, res) => {
         // Now update weather table TODO handle error of NWS data missing any of these fields
         var observation = results.data.features[0].properties;
         var time = observation.timestamp;
-        var temperature = observation.temperature.value;
-        var wind_speed = observation.windSpeed.value;
-        var wind_direction = observation.windDirection.value;
-        var wind_gust = observation.windGust.value;
-        var pressure = observation.barometricPressure.value;
-        var humidity = observation.relativeHumidity.value;
-        var description = observation.textDescription;
-        var min_temp = observation.minTemperatureLast24Hours.value;
-        var max_temp = observation.maxTemperatureLast24Hours.value;
-        var prec_last_hour = observation.precipitationLastHour.value;
-        var prec_last_3_hours = observation.precipitationLast3Hours.value;
-        var prec_last_6_hours = observation.precipitationLast6Hours.value;
+        if ('temperature' in observation){
+          var temperature = observation.temperature.value;
+        } else {
+          var temperature = null;
+        }
+        if ('windSpeed' in observation){
+          var wind_speed = observation.windSpeed.value;
+        } else {
+          var wind_speed = null;
+        }
+        if ('windGust' in observation){
+          var wind_gust = observation.windGust.value;
+        } else {
+          var wind_gust = null;
+        }
+        if ('windDirection' in observation){
+          var wind_direction = observation.windDirection.value;
+        } else {
+          var wind_direction = null;
+        }
+        if ('barometricPressure' in observation){
+          var pressure = observation.barometricPressure.value;
+        } else {
+          var pressure = null;
+        }
+        if ('relativeHumidity' in observation){
+          var humidity = observation.relativeHumidity.value;
+        } else {
+          var humidity = null;
+        }
+        if ('textDescription' in observation){
+          var description = observation.textDescription;
+        } else {
+          var description = null;
+        }
+        if ('minTemperatureLast24Hours' in observation){
+          var min_temp = observation.minTemperatureLast24Hours.value;
+        } else {
+          var min_temp = null;
+        }
+        if ('maxTemperatureLast24Hours' in observation){
+          var max_temp = observation.maxTemperatureLast24Hours.value;
+        } else {
+          var max_temp = null;
+        }
+        if ('precipitationLastHour' in observation){
+          var prec_last_hour = observation.precipitationLastHour.value;
+        } else {
+          var prec_last_hour = null;
+        }
+        if ('precipitationLast3Hours' in observation){
+          var prec_last_3_hours = observation.precipitationLast3Hours.value;
+        } else {
+          var prec_last_3_hours = null;
+        }
+        if ('precipitationLast6Hours' in observation){
+          var prec_last_6_hours = observation.precipitationLast6Hours.value;
+        } else {
+          var prec_last_6_hours = null;
+        }
         
         query = `INSERT INTO weather
     (nws_zone, observation_time, temperature, pressure, humidity, description,
