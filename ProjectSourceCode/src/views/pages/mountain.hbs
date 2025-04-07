@@ -10,11 +10,12 @@
         height: 200px;
         object-fit: cover;
         }
+        
     </style>
 </head>
 <body>
 
-    <div class = "p-3 mb-2 bg-primary text-white">
+    <div class="p-3 mb-2 text-white" style="background-color: #4a7fb4;">
         <div class="card text-center mb-3" style="max-width: fit-content; margin-left: auto;margin-right: auto;">
             <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625"  alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
             <div class="card-body">
@@ -32,15 +33,15 @@
         </div>
     </div>
     <div class="container mt-4">
-    <div class="d-flex flex-row justify-content-center gap-3 flex-wrap">
-      <div class="card text-center mb-3" style="width: 18rem;">
-        <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
-        <div class="card-body">
-          <h5 class="card-title">Lifts and Infrastructure</h5>
-          <div id="lift-star-rating" class="star-rating"></div>
-          <script> setStarRating_large(3.5, 'lift-star-rating');</script>
-        </div>
-      </div>
+        <div class="d-flex flex-row justify-content-center gap-3 flex-wrap">
+            <div class="card text-center mb-3" style="width: 18rem;">
+                <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
+                <div class="card-body">
+                <h5 class="card-title">Lifts and Infrastructure</h5>
+                <div id="lift-star-rating" class="star-rating"></div>
+                <script> setStarRating_large(3.5, 'lift-star-rating');</script>
+                </div>
+            </div>
 
       <div class="card text-center mb-3" style="width: 18rem;">
         <img src="https://images.squarespace-cdn.com/content/v1/5e7a324590664f18b1bfea0c/1699319261524-Y4NXLAKXYFO6VZBEKJG5/kickinghorset1ridge.jpeg" class="card-img-top" alt="Difficulty">
@@ -60,6 +61,46 @@
         </div>
       </div>
     </div>
+    <div class="w-100 py-4 text-center" style="background-color: #39628a; color: white;">
+        <h1 class="m-0">Reviews</h1>
+    </div>
+    <div class="container mt-4">
+        <div class="card" style="max-height: 600px; overflow-y: auto;">
+            <div class="card-body">
+            {{#each reviews}}
+                <div class="mb-5 border-bottom pb-4">
+
+                <div class="mb-2">
+                    <h6 class="mb-0">{{username}}</h6>
+                    <small class="text-muted">{{date_posted}}</small>
+                    <div id="review-{{review_id}}"></div>
+                    <script>
+                    var reviewId = "review-{{review_id}}";
+                    console.log(reviewId)
+                    var rating = {{rating}};
+                    setStarRating_med(rating, reviewId);
+                    </script>
+                </div>
+
+
+                <div class="d-flex flex-wrap">
+                    <div class="flex-grow-1">
+                    <p class="mb-0">{{review}}</p>
+                    </div>
+                    {{#if image}}
+                    <div class="ms-4 mt-3 mt-md-0">
+                        <img src="{{image}}" alt="{{username}}'s image"
+                        class="rounded"
+                        style="width: 400px; height: 400px; object-fit: cover;">
+                    </div>
+                    {{/if}}
+                </div>
+                </div>
+            {{/each}}
+            </div>
+        </div>
+    </div>
+     
   </div>
 </div>
 </body>

@@ -62,6 +62,38 @@ app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
+/*
+app.get('/mountain', (req, res) => {
+  res.render('pages/mountain', {
+    reviews: [
+      {
+        username: "John Doe",
+        review_id: 1,
+        review: "This is an amazing mountain. Highly recommend",
+        date_posted: "2025-04-06",
+        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
+        rating: 4.5
+      },
+      {
+        username: "Jane Smith",
+        review_id: 2,
+        review: "It was okay.",
+        date_posted: "2025-04-05",
+        rating: 3.5
+      },
+      {
+        username: "Alex Johnson",
+        review_id: 3,
+        review: "This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. ",
+        date_posted: "2025-04-04",
+        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
+        rating: 4.0
+      }
+    ]
+  });
+});
+*/
+
 app.post('/register', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
