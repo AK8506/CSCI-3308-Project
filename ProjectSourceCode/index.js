@@ -154,7 +154,9 @@ app.post('/login', async (req, res) => {
 });
 
 const auth = (req, res, next) => {
-  if (!req.session.user) {
+  console.log("here with req session");
+  console.log(req.session);
+  if (req.session && !req.session.user) {
     return res.redirect('/login');
   }
   next();
@@ -162,8 +164,25 @@ const auth = (req, res, next) => {
 
 app.use(auth);
 
+
+app.get('/profile', (req, res) => {
+  console.log("Testing Here");
+  if (!req.session || !req.session.user) {
+    return res.status(401).send('Not authenticated');
+  }
+  try {
+    res.status(200).json({
+      username: req.session.user.username,
+    });
+  } catch (err) {
+    console.error('Profile error:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
-
-module.exports = app.listen(3000);
+if (require.main === module) {
+  app.listen(3000, () => console.log('Server running'));
+}
+module.exports = {app, db};

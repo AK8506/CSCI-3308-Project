@@ -1,22 +1,24 @@
 // ********************** Initialize server **********************************
 
-const server = require('../index'); //TODO: Make sure the path to your index.js is correctly added
+const {app, db}  = require('../index'); //TODO: Make sure the path to your index.js is correctly added
 
 // ********************** Import Libraries ***********************************
 
 const chai = require('chai'); // Chai HTTP provides an interface for live integration testing of the API's.
 const chaiHttp = require('chai-http');
+const bcrypt = require('bcryptjs');
+
+
 chai.should();
 chai.use(chaiHttp);
 const {assert, expect} = chai;
 
-// ********************** DEFAULT WELCOME TESTCASE ****************************
 
 describe('Server!', () => {
   // Sample test case given to test / endpoint.
   it('Returns the default welcome message', done => {
     chai
-      .request(server)
+      .request(app)
       .get('/welcome')
       .end((err, res) => {
         expect(res).to.have.status(200);
@@ -39,7 +41,7 @@ describe('Server!', () => {
 describe('Testing Add User API', () => {
     it('positive : /register', done => {
       chai
-        .request(server)
+        .request(app)
         .post('/register')
         .send({username: 'test3', email: 'test@email.com', password: 'test3'})
         .end((err, res) => {
@@ -56,7 +58,7 @@ describe('Testing Add User API', () => {
   
     it('Negative : /register. Checking invalid name', done => {
       chai
-        .request(server)
+        .request(app)
         .post('/register')
         .send({username: null, email: 'test@email.com', password: 'test'})
         .end((err, res) => {
@@ -69,17 +71,77 @@ describe('Testing Add User API', () => {
 
   describe('Testing Redirect', () => {
     // Sample test case given to test /test endpoint.
-    it('\test route should redirect to /login with 302 HTTP status code', done => {
+    it('\test route should redirect to /login with 200 HTTP status code', done => {
       chai
-        .request(server)
+        .request(app)
         .get('/test')
-        .redirects(0)
         .end((err, res) => {
-          res.should.have.status(301); // Expecting a redirect status code
-          //expect(res).to.have.header('location', '/login');
-          //res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
+          res.should.have.status(200); // Expecting a redirect status code
+          res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
           done();
         });
+    });
+  });
+
+
+  describe('Profile Route Tests', () => {
+    let agent;
+    const testUser = {
+      username: 'testuser',
+      password: 'testpass123',
+      email: 'testemail@test.com'
+    };
+  
+    before(async () => {
+      
+      // Clear users table and create test user
+      await db.query('TRUNCATE TABLE users CASCADE');
+      const hashedPassword = await bcrypt.hash(testUser.password, 10);
+      await db.query('INSERT INTO users (username, email, password) VALUES ($1, $2, $3)', [
+        testUser.username,
+        testUser.email,
+        hashedPassword,
+      ]);
+    });
+  
+    beforeEach(() => {
+      // Create new agent for session handling
+      agent = chai.request.agent(app);
+    });
+  
+    afterEach(() => {
+      // Clear cookie after each test
+      agent.close();
+    });
+  
+    after(async () => {
+      // Clean up database
+      await db.query('TRUNCATE TABLE users CASCADE');
+    });
+  
+    describe('GET /profile', () => {
+      it('should return 401 if user is not authenticated', done => {
+        chai
+          .request(app)
+          .get('/profile')
+          .end((err, res) => {
+            expect(res).to.have.status(401);
+            expect(res.text).to.equal('Not authenticated');
+            done();
+          });
+      });
+  
+      it('should return user profile when authenticated', async () => {
+        // First login to get session
+        await agent.post('/login').send(testUser);
+  
+        // Then access profile
+        const res = await agent.get('/profile');
+  
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.an('object');
+        expect(res.body).to.have.property('username', testUser.username);
+      });
     });
   });
 // ********************************************************************************
