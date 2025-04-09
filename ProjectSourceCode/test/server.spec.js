@@ -120,13 +120,13 @@ describe('Testing Add User API', () => {
     });
   
     describe('GET /profile', () => {
-      it('should return 401 if user is not authenticated', done => {
+      it('should redirect to login if user is not authenticated', done => {
         chai
           .request(app)
           .get('/profile')
           .end((err, res) => {
-            expect(res).to.have.status(401);
-            expect(res.text).to.equal('Not authenticated');
+            res.should.have.status(200); // Expecting a redirect status code
+            res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); 
             done();
           });
       });

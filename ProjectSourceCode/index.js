@@ -165,7 +165,7 @@ const auth = (req, res, next) => {
   console.log("here with req session");
   console.log(req.session);
   if (req.session && !req.session.user) {
-   // return res.redirect('/login');
+    return res.redirect('/login');
   }
   next();
 }
