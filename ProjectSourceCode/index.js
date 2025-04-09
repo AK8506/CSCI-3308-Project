@@ -8,6 +8,12 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
+app.use(session({
+  secret: 'super duper secret',  // Secret key to sign the session ID cookie
+  resave: false,              // Don't resave session if it wasn't modified
+  saveUninitialized: false,    // Save session even if not modified
+}));
+
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
@@ -43,6 +49,8 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
 app.use(express.static(__dirname + '/'));
+
+
 
 app.use(
   bodyParser.urlencoded({
@@ -157,7 +165,7 @@ const auth = (req, res, next) => {
   console.log("here with req session");
   console.log(req.session);
   if (req.session && !req.session.user) {
-    return res.redirect('/login');
+   // return res.redirect('/login');
   }
   next();
 }
@@ -171,6 +179,7 @@ app.get('/profile', (req, res) => {
     return res.status(401).send('Not authenticated');
   }
   try {
+    console.log(req.session.user.username);
     res.status(200).json({
       username: req.session.user.username,
     });
@@ -179,6 +188,10 @@ app.get('/profile', (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  });
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
