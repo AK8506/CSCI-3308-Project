@@ -8,6 +8,12 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
+app.use(session({
+  secret: 'super duper secret',  // Secret key to sign the session ID cookie
+  resave: false,              // Don't resave session if it wasn't modified
+  saveUninitialized: false,    // Save session even if not modified
+}));
+
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
@@ -42,6 +48,8 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
+app.use(express.static(__dirname + '/'));
+
 
 
 app.use(
@@ -56,16 +64,32 @@ app.get('/', (req, res) => {
   res.render('pages/home');
 });
 
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
 
 app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
+app.get('/test', (req, res) => {
+  res.status(302).redirect('/login');
+});
+
 app.post('/register', async (req, res) => {
   const username = req.body.username;
+  const email = req.body.email;
   const password = req.body.password;
-
+  if(username == null) {
+    console.log('null');
+    res.status(400).render('pages/register', {message: 'username cannot be null'});
+  } else {
   // check if username already exists
   const query = 'SELECT * FROM users WHERE username = $1';
   db.oneOrNone(query, [username])
@@ -78,29 +102,35 @@ app.post('/register', async (req, res) => {
         const hash = await bcrypt.hash(password, 10);
 
         // Insert username and hashed password into the 'users' table
-        const insertQuery = 'INSERT INTO users(username, password) VALUES($1, $2)';
-        db.none(insertQuery, [username, hash])
+        const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
+        db.none(insertQuery, [username, email, hash])
           .then(() => {
-            res.render('pages/register', { message: 'Account created.' });
+            res.status(200).render('pages/register', { message: 'Account created.' });
           })
           .catch((err) => {
             console.log(err);
+            res.status(400).json ({
+              error: err
+            });
             res.render('pages/register', { message: 'Error creating account.' });
           });
       }
     })
     .catch((err) => {
       console.log(err);
-      res.render('pages/register', { message: 'Error checking account.' });
+      res.status(400).json({
+        error: err,
+        message: "bottom error"
+      });
+      res.render('pages/register', { message: 'Error creating account.' });
     });
+  }
 });
 
 
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
-app.post('/login', (req, res) => {
-  req.render('pages/login');
-});
+
 
 app.post('/login', async (req, res) => {
   const username = req.body.username;
@@ -117,6 +147,7 @@ app.post('/login', async (req, res) => {
         req.session.user = user;
         res.session.save();
         res.redirect('/home'); // redirect to home page
+        res.status(200)
       } else {
         console.log('Password is incorrect');
         res.render('pages/login', { message: 'Password is incorrect' }); // make a messages.hbs file
@@ -131,7 +162,9 @@ app.post('/login', async (req, res) => {
 });
 
 const auth = (req, res, next) => {
-  if (!req.session.user) {
+  console.log("here with req session");
+  console.log(req.session);
+  if (req.session && !req.session.user) {
     return res.redirect('/login');
   }
   next();
@@ -139,6 +172,26 @@ const auth = (req, res, next) => {
 
 app.use(auth);
 
+
+app.get('/profile', (req, res) => {
+  console.log("Testing Here");
+  if (!req.session || !req.session.user) {
+    return res.status(401).send('Not authenticated');
+  }
+  try {
+    console.log(req.session.user.username);
+    res.status(200).json({
+      username: req.session.user.username,
+    });
+  } catch (err) {
+    console.error('Profile error:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  });
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 
 // -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
@@ -169,5 +222,7 @@ app.post('/mountain', (req, res) => {
 });
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
-
-app.listen(3000);
+if (require.main === module) {
+  app.listen(3000, () => console.log('Server running'));
+}
+module.exports = {app, db};
