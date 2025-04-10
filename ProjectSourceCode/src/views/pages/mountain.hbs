@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOUNTAIN NAME</title>
+    <script src="./src/views/pages/stars.js"></script>
+    <script>
+    (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+    key: `{{apiKey}}`,
+    v: "weekly",
+     });
+    </script>
+    <script type="module">
+        async function loadMap() {
+            await google.maps.importLibrary("maps");
+            const module = await import("./src/views/pages/map.js");
+            module.initMap({{lattitude}}, {{longitude}});
+        }
+    loadMap();
+    </script>
+    <style>
+        .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        }
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="p-3 mb-2 text-white" style="background-color: #4a7fb4;">
+        <div class="card text-center mb-3" style="max-width: fit-content; margin-left: auto;margin-right: auto;">
+            <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625"  alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
+            <div class="card-body">
+                <h5 class="card-title">TEST MOUNTAIN</h5>
+                <p class="text">LOCATION: TEST MOUNTAIN LOCATION</p>
+                <p class="text">PASSES: TEST MOUNTAIN PASSES</p>
+                <p class="text">MAX ELEVATION: TEST MOUNTAIN MAX ELEVATION</p>
+                
+                <div class="container mt-4">
+                    <div id="overall-star-rating" class="star-rating"></div>
+                </div>
+                <script> setStarRating_xl(2.5, 'overall-star-rating');</script>
+
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        <div class="d-flex flex-row justify-content-center gap-3 flex-wrap">
+            <div class="card text-center mb-3" style="width: 18rem;">
+                <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
+                <div class="card-body">
+                <h5 class="card-title">Lifts and Infrastructure</h5>
+                <div id="lift-star-rating" class="star-rating"></div>
+                <script> setStarRating_large(3.5, 'lift-star-rating');</script>
+                </div>
+            </div>
+
+      <div class="card text-center mb-3" style="width: 18rem;">
+        <img src="https://images.squarespace-cdn.com/content/v1/5e7a324590664f18b1bfea0c/1699319261524-Y4NXLAKXYFO6VZBEKJG5/kickinghorset1ridge.jpeg" class="card-img-top" alt="Difficulty">
+        <div class="card-body">
+          <h5 class="card-title">Difficulty</h5>
+          <div id="difficulty-star-rating" class="star-rating"></div>
+          <script> setStarRating_large(4.5, 'difficulty-star-rating');</script>
+        </div>
+      </div>
+
+      <div class="card text-center mb-3" style="width: 18rem;">
+        <img src="https://snowbrains.com/wp-content/uploads/2023/01/faceshots-alta-ski-area-fb.jpg" class="card-img-top" alt="Snow Quality">
+        <div class="card-body">
+          <h5 class="card-title">Snow Quality</h5>
+          <div id="snow-star-rating" class="star-rating"></div>
+          <script> setStarRating_large(4, 'snow-star-rating');</script>
+        </div>
+      </div>
+    </div>
+    <div class="w-100 py-4 text-center" style="background-color: #39628a; color: white;">
+        <h1 class="m-0">Reviews</h1>
+    </div>
+    <div class="container mt-4">
+        <div class="card" style="max-height: 600px; overflow-y: auto;">
+            <div class="card-body">
+            {{#each reviews}}
+                <div class="mb-5 border-bottom pb-4">
+
+                <div class="mb-2">
+                    <h6 class="mb-0">{{username}}</h6>
+                    <small class="text-muted">{{date_posted}}</small>
+                    <div id="review-{{review_id}}"></div>
+                    <script>
+                    var reviewId = "review-{{review_id}}";
+                    var rating = {{rating}};
+                    setStarRating_med(rating, reviewId);
+                    </script>
+                </div>
+
+
+                <div class="d-flex flex-wrap">
+                    <div class="flex-grow-1">
+                    <p class="mb-0">{{review}}</p>
+                    </div>
+                    {{#if image}}
+                    <div class="ms-4 mt-3 mt-md-0">
+                        <img src="{{image}}" alt="{{username}}'s image"
+                        class="rounded"
+                        style="width: 400px; height: 400px; object-fit: cover;">
+                    </div>
+                    {{/if}}
+                </div>
+                </div>
+            {{/each}}
+            </div>
+        </div>
+    </div>
+   <div class="container my-4 d-flex justify-content-center">
+  <div class="p-4 border rounded" id="map" style="height: 500px; width: 80%;"></div>
+</div>
+     
+  </div>
+</div>
+</body>
+</html>

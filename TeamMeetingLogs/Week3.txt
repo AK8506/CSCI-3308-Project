@@ -1,0 +1,22 @@
+Week 3:
+
+We started without Thomas.
+
+Went over that we had started the lab11 and only needed to finish part c now. Lance said that he would finish up in the next couple of days.
+
+Went over a couple of problems with the individual rendering of the mountain and how we can mesh the two well
+
+Then started talking about weather api data for the rendering. Julia said that she didn't know how to schedule the api to call when we felt like our weather was outdated. Brought up that we could check timestamp of when previous was added and then look into that.
+
+
+Then talked about how we are going to get the mountain info into the database. Possible have a feature that we can have users request to add to the database of mountains. 
+
+Talked about release notes and needing to refresh the project board. 
+
+The google maps integration was not working just right. Julia said that she knew someone else that had been able to get it done and would look into that.
+
+Talked about how are we going to decide what is supposed to be the next part of the sprint. Josh wanted to do the display of mountain frame on the home page.
+
+(Split up and added to the project board)
+
+ 
