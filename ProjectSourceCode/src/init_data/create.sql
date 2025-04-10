@@ -29,7 +29,6 @@ CREATE TABLE mountains (
   location_name VARCHAR(100) NOT NULL,
   latitude FLOAT NOT NULL,
   longitude FLOAT NOT NULL,
-  pass VARCHAR(100) NOT NULL,
   avg_rating DECIMAL NOT NULL,
   peak_elevation INT NOT NULL,
   nws_zone VARCHAR(10)
@@ -83,4 +82,16 @@ DROP TABLE IF EXISTS mountains_to_reviews;
 CREATE TABLE mountains_to_reviews (
   mountain_id INT NOT NULL,
   review_id INT NOT NULL
+);
+
+DROP TABLE IF EXISTS mountains_to_passes;
+CREATE TABLE mountains_to_passes (
+  mountain_id INT NOT NULL,
+  pass_id INT NOT NULL
+);
+
+DROP TABLE IF EXISTS passes;
+CREATE TABLE passes (
+  pass_id SERIAL PRIMARY KEY,
+  pass_name VARCHAR(50)
 );
