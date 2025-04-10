@@ -5,10 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOUNTAIN NAME</title>
     <script src="./src/views/pages/stars.js"></script>
+    <script>
+    (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+    key: `{{apiKey}}`,
+    v: "weekly",
+     });
+    </script>
+    <script type="module">
+        async function loadMap() {
+            await google.maps.importLibrary("maps");
+            const module = await import("./src/views/pages/map.js");
+            module.initMap({{lattitude}}, {{longitude}});
+        }
+    loadMap();
+    </script>
     <style>
         .card-img-top {
         height: 200px;
         object-fit: cover;
+        }
+        #map {
+            width: 100%;
+            height: 500px;
         }
         
     </style>
@@ -76,7 +94,6 @@
                     <div id="review-{{review_id}}"></div>
                     <script>
                     var reviewId = "review-{{review_id}}";
-                    console.log(reviewId)
                     var rating = {{rating}};
                     setStarRating_med(rating, reviewId);
                     </script>
@@ -100,6 +117,9 @@
             </div>
         </div>
     </div>
+   <div class="container my-4 d-flex justify-content-center">
+  <div class="p-4 border rounded" id="map" style="height: 500px; width: 80%;"></div>
+</div>
      
   </div>
 </div>

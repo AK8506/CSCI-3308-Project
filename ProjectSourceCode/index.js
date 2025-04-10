@@ -25,6 +25,14 @@ const dbConfig = {
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
+    resave: false,
+  })
+);
+
 const db = pgp(dbConfig);
 
 // test your database
@@ -89,7 +97,9 @@ app.get('/mountain', (req, res) => {
         image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
         rating: 4.0
       }
-    ]
+    ], apiKey : process.env.API_KEY,
+      lattitude: 39.606144,
+      longitude:-106.354972
   });
 });
 */
@@ -130,8 +140,8 @@ app.post('/register', async (req, res) => {
 
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
-app.post('/login', (req, res) => {
-  req.render('pages/login');
+app.get('/login', (req, res) => {
+  res.render('pages/login');
 });
 
 app.post('/login', async (req, res) => {
