@@ -472,6 +472,11 @@ app.get('/logout', (req, res) => {
   req.session.destroy();
   });
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
+app.get('/logout', (req, res) => {
+    req.session.destroy(function (err) {
+      res.render('pages/logout');
+    });
+  });
 
 // -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
 
