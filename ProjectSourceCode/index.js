@@ -185,7 +185,7 @@ app.get('/weather', (req, res) => {
             var prec_last_6_hours = null;
           }
           
-          query = `INSERT INTO weather
+          query = `DELETE from weather where nws_zone = $1; INSERT INTO weather
       (nws_zone, observation_time, temperature, pressure, humidity, description,
       max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
         precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
