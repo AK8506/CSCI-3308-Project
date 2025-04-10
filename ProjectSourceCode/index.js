@@ -31,6 +31,14 @@ const dbConfig = {
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: false,
+    resave: false,
+  })
+);
+
 const db = pgp(dbConfig);
 
 // test your database
@@ -57,7 +65,7 @@ app.use(
     extended: true,
   })
 );
-
+app.use(express.static(__dirname + '/'));
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 app.get('/', (req, res) => {
@@ -78,9 +86,45 @@ app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
+
+/*
+app.get('/mountain', (req, res) => {
+  res.render('pages/mountain', {
+    reviews: [
+      {
+        username: "John Doe",
+        review_id: 1,
+        review: "This is an amazing mountain. Highly recommend",
+        date_posted: "2025-04-06",
+        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
+        rating: 4.5
+      },
+      {
+        username: "Jane Smith",
+        review_id: 2,
+        review: "It was okay.",
+        date_posted: "2025-04-05",
+        rating: 3.5
+      },
+      {
+        username: "Alex Johnson",
+        review_id: 3,
+        review: "This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. ",
+        date_posted: "2025-04-04",
+        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
+        rating: 4.0
+      }
+    ], apiKey : process.env.API_KEY,
+      lattitude: 39.606144,
+      longitude:-106.354972
+  });
+});
+*/
+
 app.get('/test', (req, res) => {
   res.status(302).redirect('/login');
 });
+
 
 app.post('/register', async (req, res) => {
   const username = req.body.username;
@@ -130,7 +174,9 @@ app.post('/register', async (req, res) => {
 
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
-
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
 
 app.post('/login', async (req, res) => {
   const username = req.body.username;
