@@ -142,23 +142,67 @@ app.use(auth);
 
 // -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
 
-app.get('/mountain', (req, res) => {
-  res.render('pages/mountain', {
-    user: req.session.user,
-  });
+app.get('/mountain/:id', (req, res) => {
+  const mountainId = req.params.id;
+  const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
+
+  db.oneOrNone(query, [mountainId])
+    .then((mountain) => {
+      if (mountain) {
+        res.render('pages/mountain', {
+          user: req.session.user,
+          mountain_name: mountain.mountain_name,
+          location_name: mountain.location_name,
+          latitude: mountain.latitude,
+          longitude: mountain.longitude,
+          avg_rating: mountain.avg_rating,
+          peak_elevation: mountain.peak_elevation,
+        });
+      } else {
+        res.render('pages/mountain', {
+          user: req.session.user,
+          message: 'Mountain not found',
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.render('pages/mountain', {
+        user: req.session.user,
+        message: 'Error fetching mountain data',
+      });
+    });
 });
 
 // Path for user to post a review of a mountain
-app.post('/mountain', (req, res) => {
+app.post('/mountain/:id', (req, res) => {
+  const mountainId = req.params.id;
   const username = req.session.user.username;
   const review = req.body.review;
   const date_posted = new Date();
   const rating = req.body.rating;
-  const query = 'INSERT INTO reviews(username, review ,date_posted, rating) VALUES($1, $2, $3, $4)';
 
-  db.none(query, [username, review, date_posted, rating])
+  // Insert the review into the reviews table
+  const insertReviewQuery = `
+    INSERT INTO reviews(username, review, date_posted, rating) 
+    VALUES($1, $2, $3, $4) 
+    RETURNING review_id
+  `;
+
+  db.one(insertReviewQuery, [username, review, date_posted, rating])
+    .then((result) => {
+      const reviewId = result.review_id;
+
+      // Link the review to the mountain in the mountains_to_reviews table
+      const linkReviewQuery = `
+        INSERT INTO mountains_to_reviews(mountain_id, review_id) 
+        VALUES($1, $2)
+      `;
+
+      return db.none(linkReviewQuery, [mountainId, reviewId]);
+    })
     .then(() => {
-      console.log('Review posted successfully');
+      console.log('Review posted and linked to mountain successfully');
       res.render('pages/mountain', { message: 'Review posted successfully' });
     })
     .catch((err) => {
