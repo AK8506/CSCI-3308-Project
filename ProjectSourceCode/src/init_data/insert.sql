@@ -14,13 +14,23 @@ INSERT INTO reviews
     VALUES 
     (
         'test1', 'Pretty good test run here at this mountain', '2022-07-22', 4.5
+    ),
+    (
+        'test2', 'I love this place', '2023-01-04', 5.0
+    ),
+    (
+        'test1', 'Not much snow unfortunately', '2023-05-04', 2.2
     );
 
 INSERT INTO mountains
     (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation)
     VALUES
     (
-        'TestMT', 'Testing City', 31.11, 32.011, 3.5, 12000
+        'TestMT', 'Testing City', 45, -116, 'Epic', 3.5, 12000
+    ),
+    (
+        'TestMT2', 'Testing City2', 36.01, -106.7, 'Ikon', 4.2, 15000
+
     );
 
 INSERT INTO images
@@ -28,6 +38,15 @@ INSERT INTO images
     VALUES
     (
         'testing.com', 'Testing image'
+    ),
+    (
+        'testing2.com', 'Testing image2'
+    ),
+    (
+        'testing3.com', 'Testing image3'
+    ),
+    (
+        'testing4.com', 'Testing image4'
     );
 
 INSERT INTO mountains_to_reviews
@@ -35,6 +54,12 @@ INSERT INTO mountains_to_reviews
     VALUES
     (
         1, 1
+    ),
+    (
+        1,2
+    ),
+    (
+        2,3
     );   
 
 INSERT INTO mountains_to_images
@@ -50,7 +75,15 @@ INSERT INTO reviews_to_images
     VALUES
     (
         2, 4
+
+    ),
+    (
+        2, 3
+    ),
+    (
+        1, 2
     );   
+
 
 INSERT INTO passes 
     (pass_name)
@@ -68,3 +101,4 @@ INSERT INTO mountains_to_passes
     (
         1,1
     );
+
