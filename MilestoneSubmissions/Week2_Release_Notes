@@ -1,0 +1,45 @@
+Date: 4/7/2025
+
+Contributors: Julia DiTomas, Lance Kluge, Akshay Patnaik, Josh Huang, Thomas Parameswaran 
+
+Week 2 Release Notes: (No week 1 due to break)
+
+Features Completed:
+  - Ind mountain page
+      We now have the partial ability to render a page based on the mountain that was requested with info on reviews and basic info about the mountain
+
+  - Nav Bar login
+      User should now be able to use the nav bar to click and navigate to the login page
+
+  - Home button nav bar
+      User should be able to get to the home page from the nav bar
+
+  - Database setup
+      Db is now operational with correct links to each others.
+
+  - DB images 
+      We can now retrieve images associated with a review from the db
+
+  - DB reviews 
+      We can now retrieve reviews associated with a mountain from the db
+
+  - DB register and login 
+      User can now login and register with a correct session.
+
+  - Username in nav bar
+      User can now see their own username in the nav bar to indicate when they are logged in
+
+  - logout button in nav bar
+      User should be able to logout through the nav bar when logged in.
+
+
+Roll Over:
+
+  - Message display hbs file:
+      Being able to display a message to the user when something succeeded or failed
+
+  - Ability to get real time weather data from an API (scheduled)
+      The database will be updated with relatively recent weather forecast for the given mountain. 
+
+  - Ability to create reviews for a mountain
+      A user should be able to create a review and have it stored in the database when they are finished.
