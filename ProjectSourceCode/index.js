@@ -70,8 +70,74 @@ app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
-/*
+
 app.get('/mountain', (req, res) => {
+  const periodsTest = [
+    {
+      name: "This Afternoon",
+      temperature: 70,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NW",
+      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
+      shortForecast: "Sunny",
+      probabilityOfPrecipitation: 0
+    },
+    {
+      name: "Tonight",
+      temperature: 38,
+      temperatureUnit: "F",
+      windSpeed: "5 to 15 mph",
+      windDirection: "NW",
+      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
+      shortForecast: "Clear",
+      probabilityOfPrecipitation: 10
+    },
+    {
+      name: "Friday",
+      temperature: 84,
+      temperatureUnit: "F",
+      windSpeed: "5 to 10 mph",
+      windDirection: "SW",
+      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
+      shortForecast: "Cloudy",
+      probabilityOfPrecipitation: 40
+    },
+    {
+      name: "Friday Night",
+      temperature: 45,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
+      shortForecast: "Clear",
+      probabilityOfPrecipitation: 0
+    },
+    {
+      name: "Saturday",
+      temperature: 45,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/day/rain_showers,40?size=medium",
+      shortForecast: "Chance Rain Showers",
+      probabilityOfPrecipitation: 40
+    },
+    {
+      name: "Saturday Night",
+      temperature: 35,
+      temperatureUnit: "F",
+      windSpeed: "30 to 40 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/night/tsra_hi,30?size=medium",
+      shortForecast: "Chance Showers And Thunderstorms",
+      probabilityOfPrecipitation: 30
+    }
+  ];
+  const paired = [];
+  for (let i = 0; i < periodsTest.length; i += 2) {
+    paired.push([periodsTest[i], periodsTest[i + 1]]);
+  }
   res.render('pages/mountain', {
     reviews: [
       {
@@ -99,10 +165,11 @@ app.get('/mountain', (req, res) => {
       }
     ], apiKey : process.env.API_KEY,
       lattitude: 39.606144,
-      longitude:-106.354972
+      longitude:-106.354972,
+      periods : paired
   });
 });
-*/
+
 
 app.post('/register', async (req, res) => {
   const username = req.body.username;
