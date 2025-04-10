@@ -124,7 +124,7 @@ app.get('/weather', (req, res) => {
   var values = [nws_zone];
   db.oneOrNone(query, values)
     .then(data => {
-      if (!data.observation_time){ // no previous observations for this zone
+      if (!data){ // no previous observations for this zone
         var diffInMs = Infinity;
       } else {
         var observation_time = new Date(data.observation_time);
