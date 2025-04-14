@@ -44,7 +44,10 @@ CREATE TABLE mountains (
   pass VARCHAR(100) NOT NULL,
   avg_rating DECIMAL NOT NULL,
   peak_elevation INT NOT NULL,
-  nws_zone VARCHAR(10)
+  nws_zone VARCHAR(10),
+  forecast_office VARCHAR(3),
+  grid_x INTEGER,
+  grid_y INTEGER
 );
 
 DROP TABLE IF EXISTS weather;
