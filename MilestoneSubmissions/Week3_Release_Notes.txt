@@ -1,0 +1,42 @@
+Date: 4/14/2025
+
+Contributors: Julia DiTomas, Lance Kluge, Akshay Patnaik, Josh Huang, Thomas Parameswaran 
+
+Week 3 Release Notes: 
+
+Features Completed:
+
+Features Completed:
+   - Completed Weather View on Individual Mountain Page:
+Users are now able to see a visual representation of the current weather and weather forecast on each mountain page
+
+   -Integrated Google Maps
+Users now have the option of seeing google maps location on each individual mountain page
+
+   - Getting weather observation data from our database if available and updating it from NWS as needed
+
+   - Made accessing mountain data easier in mountain.hbs from index.js route
+
+   - Ensured reviews inputted from individual mountain page are linked to respective mountains
+
+   - Users can log in and be redirected and greeted.
+
+   - Users can log out and are redirected to the home page.
+
+   - Users can register an account if they don't already have one. (no repeats for emails, username, or passwords)
+
+Rolling Over:
+
+   - Ability to store images in database
+
+   - Adding a user menu
+
+   - Using icons in place of some words
+
+   - Getting weather forecast from our database if available and updating it from NWS as needed
+
+   - Adding 5-10 real mountains with real data to database for testing
+
+   - Creating a search bar & 'attribute search' to home page for mountain lookup
+
+   - Create a card layout for the homepage
