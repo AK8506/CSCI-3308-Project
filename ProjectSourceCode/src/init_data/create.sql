@@ -41,7 +41,6 @@ CREATE TABLE mountains (
   location_name VARCHAR(100) NOT NULL,
   latitude FLOAT NOT NULL,
   longitude FLOAT NOT NULL,
-  pass VARCHAR(100) NOT NULL,
   avg_rating DECIMAL NOT NULL,
   peak_elevation INT NOT NULL,
   nws_zone VARCHAR(10),

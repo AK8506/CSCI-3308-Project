@@ -247,63 +247,6 @@ app.get('/weather', (req, res) => {
 });
 
 
-app.post('/update_nws_zone', (req, res) => {
-  // This function updates the NWS zone stored in the database for the mountain given in the parameters
-  var mountain_name = req.body.mountain_name;
-
-  // First get latitude and longitude from database
-  var query = `select latitude, longitude, mountain_id from mountains where mountain_name = $1`
-  var values = [mountain_name];
-
-  db.one(query, values)
-    .then(data => {
-      var lat = data.latitude;
-      var long = data.longitude;
-      var mountain_id = data.mountain_id;
-      
-      // Now call National Weather Service API to get zone
-      axios({
-        url: 'https://api.weather.gov/points/' + lat + ',' + long,
-        method: 'GET'
-      }).then(results => {
-        var zone = results.data.properties.forecastZone;
-        zone = zone.split('forecast/')[1];
-         // Finally update in our db
-        var query = `update mountains set nws_zone = $1 where mountain_id = $2 returning *`
-        var values = [zone, mountain_id];
-        db.one(query, values)
-        .then(data => {
-          res.status(200).json({
-            data: data,
-          });
-  
-        })
-        .catch(err => {
-          res.status(400).json({
-            message: 'Error updating zone in mountains table',
-            error: err,
-          });
-        });
-       
-      })
-      .catch(err => {
-        res.status(400).json({
-          message: 'Error getting zone from NWS',
-          error: err,
-        });
-      });
-  
-    })
-    .catch(err => {
-      res.status(400).json({
-        message: 'Error getting lat/long from db',
-        error: err,
-      });
-    });
-
-  });
-
-
 app.post('/update_nws_point', (req, res) => {
   // This function updates the NWS zone stored in the database for the mountain given in the parameters
   var mountain_name = req.body.mountain_name;
@@ -324,9 +267,9 @@ app.post('/update_nws_point', (req, res) => {
         method: 'GET'
       }).then(results => {
         var zone = results.data.properties.forecastZone;
-        var forecast_office = results.data.gridId;
-        var grid_x = results.data.gridX;
-        var grid_y = results.data.gridY;
+        var forecast_office = results.data.properties.gridId;
+        var grid_x = results.data.properties.gridX;
+        var grid_y = results.data.properties.gridY;
 
         zone = zone.split('forecast/')[1];
          // Finally update in our db
