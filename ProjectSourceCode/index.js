@@ -8,6 +8,49 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const axios = require('axios'); 
+const fs = require('fs');
+const multer = require('multer');
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+	fs.mkdirSync(uploadDir, { recursive: true });
+	console.log('Created uploads directory');
+}
+
+// This allows serving static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+  cb(null, 'uploads/'); // Destination folder
+},
+
+filename: function(req, file, cb) {
+// Create unique filename with original extension
+ cb(null, Date.now() + '-' + file.originalname);
+}
+});
+
+// Set up file filter if you want to restrict file types
+
+const fileFilter = (req, file, cb) => {
+if (file.mimetype.startsWith('image/')) {
+cb(null, true);
+} else {
+  cb(new Error('Not an image! Please upload only images.'), false);
+ }
+};
+
+const upload = multer({
+storage: storage,
+limits: {
+   fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
+ },
+ fileFilter: fileFilter
+});
+
 
 app.use(session({
   secret: 'super duper secret',  // Secret key to sign the session ID cookie
@@ -595,12 +638,13 @@ app.get('/mountain/:id', (req, res) => {
 });
 
 // Path for user to post a review of a mountain
-app.post('/mountain/:id', (req, res) => {
+app.post('/mountain/:id', <u>upload.single('file')</u> , async (req, res) => {
   const mountainId = req.params.id;
   const username = req.session.user.username;
   const review = req.body.review;
   const date_posted = new Date();
   const rating = req.body.rating;
+  image_cap = req.body.image_cap;
 
   // Insert the review into the reviews table
   const insertReviewQuery = `
@@ -609,9 +653,26 @@ app.post('/mountain/:id', (req, res) => {
     RETURNING review_id
   `;
 
+  const insertImageQuery = `
+    INSERT INTO images(<u>image_url</u>, image_cap) 
+    VALUES($1, $2) 
+    RETURNING image_id
+  `;
+  const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id)
+  VALUES ($1, $2)`;
+  <u>const filePath = req.file ? req.file.path : null;</u>
+
   db.one(insertReviewQuery, [username, review, date_posted, rating])
     .then((result) => {
       const reviewId = result.review_id;
+      
+      //insert into image table
+      db.one(insertImageQuery, [<u>filePath</u>, image_cap])
+        .then((result) => {
+          const imageID = result.image_id;
+          //link review id to image id
+          db.none(insertImageToReview, [reviewId, imageID]);
+        })
 
       // Link the review to the mountain in the mountains_to_reviews table
       const linkReviewQuery = `

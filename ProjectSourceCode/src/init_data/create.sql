@@ -18,7 +18,7 @@ CREATE TABLE reviews (
 DROP TABLE IF EXISTS images;
 CREATE TABLE images (
   image_id SERIAL PRIMARY KEY,
-  image_url VARCHAR(50) NOT NULL,
+  image_url VARCHAR(200) NOT NULL,
   image_cap VARCHAR(100) NOT NULL
 );
 
@@ -29,19 +29,6 @@ CREATE TABLE mountains (
   location_name VARCHAR(100) NOT NULL,
   latitude FLOAT NOT NULL,
   longitude FLOAT NOT NULL,
-  avg_rating DECIMAL NOT NULL,
-  peak_elevation INT NOT NULL,
-  nws_zone VARCHAR(10)
-);
-
-DROP TABLE IF EXISTS mountains;
-CREATE TABLE mountains (
-  mountain_id SERIAL PRIMARY KEY,
-  mountain_name VARCHAR(100) NOT NULL,
-  location_name VARCHAR(100) NOT NULL,
-  latitude FLOAT NOT NULL,
-  longitude FLOAT NOT NULL,
-  pass VARCHAR(100) NOT NULL,
   avg_rating DECIMAL NOT NULL,
   peak_elevation INT NOT NULL,
   nws_zone VARCHAR(10)
