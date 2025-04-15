@@ -322,6 +322,94 @@ app.get('/register', (req, res) => {
 
 /*
 app.get('/mountain', (req, res) => {
+  const periodsTest = [
+    {
+      name: "This Afternoon",
+      temperature: 70,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NW",
+      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
+      shortForecast: "Sunny",
+      probabilityOfPrecipitation: 0
+    },
+    {
+      name: "Tonight",
+      temperature: 38,
+      temperatureUnit: "F",
+      windSpeed: "5 to 15 mph",
+      windDirection: "NW",
+      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
+      shortForecast: "Clear",
+      probabilityOfPrecipitation: 10
+    },
+    {
+      name: "Friday",
+      temperature: 84,
+      temperatureUnit: "F",
+      windSpeed: "5 to 10 mph",
+      windDirection: "SW",
+      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
+      shortForecast: "Cloudy",
+      probabilityOfPrecipitation: 40
+    },
+    {
+      name: "Friday Night",
+      temperature: 45,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
+      shortForecast: "Clear",
+      probabilityOfPrecipitation: 0
+    },
+    {
+      name: "Saturday",
+      temperature: 45,
+      temperatureUnit: "F",
+      windSpeed: "15 to 20 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/day/rain_showers,40?size=medium",
+      shortForecast: "Chance Rain Showers",
+      probabilityOfPrecipitation: 40
+    },
+    {
+      name: "Saturday Night",
+      temperature: 35,
+      temperatureUnit: "F",
+      windSpeed: "30 to 40 mph",
+      windDirection: "NE",
+      icon: "https://api.weather.gov/icons/land/night/tsra_hi,30?size=medium",
+      shortForecast: "Chance Showers And Thunderstorms",
+      probabilityOfPrecipitation: 30
+    }
+  ];
+  const currObs = {
+      description: "Sunny with a few Clouds. Lots of precipitation on the ground",
+      temperature: 70,
+      max_temp_last_24_hours: 80,
+      min_temp_last_24_hours: 54,
+      precipitation_last_6_hours: 20,
+      humidity: 20,
+      pressure: 820,
+      wind_speed: 4,
+      wind_gust : 15,
+      wind_direction: 50,
+      observation_time: "10:10"
+  };
+
+  const mountainInfo = {
+    mountain_name: "Test Vail",
+    location_name : "Test Vail, CO",
+    lattitude: 39.606144,
+    longitude:-106.354972,
+    avg_rating: 4.0,
+    peak_elevation: 11570
+  };
+  const paired = [];
+  for (let i = 0; i < periodsTest.length; i += 2) {
+    paired.push([periodsTest[i], periodsTest[i + 1]]);
+  }
   res.render('pages/mountain', {
     reviews: [
       {
@@ -348,11 +436,14 @@ app.get('/mountain', (req, res) => {
         rating: 4.0
       }
     ], apiKey : process.env.API_KEY,
-      lattitude: 39.606144,
-      longitude:-106.354972
+      periods : paired,
+      currentObservations: currObs,
+      mountain: mountainInfo
   });
 });
 */
+
+
 
 app.get('/test', (req, res) => {
   res.status(302).redirect('/login');
@@ -441,8 +532,6 @@ app.post('/login', async (req, res) => {
 });
 
 const auth = (req, res, next) => {
-  console.log("here with req session");
-  console.log(req.session);
   if (req.session && !req.session.user) {
     return res.redirect('/login');
   }
@@ -453,12 +542,10 @@ app.use(auth);
 
 
 app.get('/profile', (req, res) => {
-  console.log("Testing Here");
   if (!req.session || !req.session.user) {
     return res.status(401).send('Not authenticated');
   }
   try {
-    console.log(req.session.user.username);
     res.status(200).json({
       username: req.session.user.username,
     });
