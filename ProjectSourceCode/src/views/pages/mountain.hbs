@@ -57,7 +57,7 @@
                 <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
                 <div class="card-body">
                 <h5 class="card-title">Lifts and Infrastructure</h5>
-                <div id="lift-star-rating" class="star-rating"></div>
+                <div id="lift-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
                 <script> setStarRating_large(3.5, 'lift-star-rating');</script>
                 </div>
             </div>
@@ -66,7 +66,7 @@
         <img src="https://images.squarespace-cdn.com/content/v1/5e7a324590664f18b1bfea0c/1699319261524-Y4NXLAKXYFO6VZBEKJG5/kickinghorset1ridge.jpeg" class="card-img-top" alt="Difficulty">
         <div class="card-body">
           <h5 class="card-title">Difficulty</h5>
-          <div id="difficulty-star-rating" class="star-rating"></div>
+          <div id="difficulty-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
           <script> setStarRating_large(4.5, 'difficulty-star-rating');</script>
         </div>
       </div>
@@ -75,7 +75,7 @@
         <img src="https://snowbrains.com/wp-content/uploads/2023/01/faceshots-alta-ski-area-fb.jpg" class="card-img-top" alt="Snow Quality">
         <div class="card-body">
           <h5 class="card-title">Snow Quality</h5>
-          <div id="snow-star-rating" class="star-rating"></div>
+          <div id="snow-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
           <script> setStarRating_large(4, 'snow-star-rating');</script>
         </div>
       </div>
@@ -83,15 +83,15 @@
     <div class="w-100 py-4 text-center" style="background-color: #4a7ea0; color: white;">
         <h1 class="m-0">Current Weather</h1>
     </div>
-
+    
     <div class="container-fluid py-4">
         <div class="card bg-light shadow-lg">
             <div class="card-body">
-            <h4 class="card-title text-center mb-4">{{ currentObservations.description }}</h4>
+            <h4 class="card-title text-center mb-4">{{currentObservations.description}}</h4>
 
             <div class="row text-center">
                 <div class="col-md-4 mb-3">
-                <p><strong>Temperature:</strong> {{ currentObservations.temperature }} °F</p>
+                <p><strong>Temperature:</strong> {{ currentObservations.temperature }} °C</p>
                 <p><strong>Max Temp (Past 24h):</strong> {{ currentObservations.max_temp_last_24_hours }} °F</p>
                 <p><strong>Min Temp (Past 24h):</strong> {{ currentObservations.min_temp_last_24_hours }} °F</p>
                 </div>
@@ -155,7 +155,7 @@
                 <div class="mb-2">
                     <h6 class="mb-0">{{username}}</h6>
                     <small class="text-muted">{{date_posted}}</small>
-                    <div id="review-{{review_id}}"></div>
+                    <div id="review-{{review_id}}" style="padding: 10px 5px;"></div>
                     <script>
                     var reviewId = "review-{{review_id}}";
                     var rating = {{rating}};

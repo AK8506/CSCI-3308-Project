@@ -23,13 +23,13 @@ INSERT INTO reviews
     );
 
 INSERT INTO mountains
-    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation)
+    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation, nws_zone)
     VALUES
     (
-        'TestMT', 'Testing City', 45, -116, 3.5, 12000
+        'TestMT', 'Testing City', 45, -116, 3.5, 12000, 'COZ010'
     ),
     (
-        'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000
+        'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000, 'COZ010'
 
     );
 
@@ -100,5 +100,8 @@ INSERT INTO mountains_to_passes
     VALUES
     (
         1,1
+    ),
+    (
+        1,2
     );
 

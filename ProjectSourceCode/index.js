@@ -154,7 +154,6 @@ app.get('/review_images', (req, res) => {
 app.get('/weather', (req, res) => {
   // This function gets weather data from our db or from NWS api if cached data is too old.
   var nws_zone = req.query.nws_zone;
- 
   // First get NWS zone from database
   var query = `select * from weather where nws_zone = $1 order by observation_time desc limit 1;`
   var values = [nws_zone];
@@ -356,129 +355,6 @@ app.get('/register', (req, res) => {
 });
 
 
-/*
-app.get('/mountain', (req, res) => {
-  const periodsTest = [
-    {
-      name: "This Afternoon",
-      temperature: 70,
-      temperatureUnit: "F",
-      windSpeed: "15 to 20 mph",
-      windDirection: "NW",
-      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
-      shortForecast: "Sunny",
-      probabilityOfPrecipitation: 0
-    },
-    {
-      name: "Tonight",
-      temperature: 38,
-      temperatureUnit: "F",
-      windSpeed: "5 to 15 mph",
-      windDirection: "NW",
-      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
-      shortForecast: "Clear",
-      probabilityOfPrecipitation: 10
-    },
-    {
-      name: "Friday",
-      temperature: 84,
-      temperatureUnit: "F",
-      windSpeed: "5 to 10 mph",
-      windDirection: "SW",
-      icon: "https://api.weather.gov/icons/land/day/few?size=medium",
-      shortForecast: "Cloudy",
-      probabilityOfPrecipitation: 40
-    },
-    {
-      name: "Friday Night",
-      temperature: 45,
-      temperatureUnit: "F",
-      windSpeed: "15 to 20 mph",
-      windDirection: "NE",
-      icon: "https://api.weather.gov/icons/land/night/skc?size=medium",
-      shortForecast: "Clear",
-      probabilityOfPrecipitation: 0
-    },
-    {
-      name: "Saturday",
-      temperature: 45,
-      temperatureUnit: "F",
-      windSpeed: "15 to 20 mph",
-      windDirection: "NE",
-      icon: "https://api.weather.gov/icons/land/day/rain_showers,40?size=medium",
-      shortForecast: "Chance Rain Showers",
-      probabilityOfPrecipitation: 40
-    },
-    {
-      name: "Saturday Night",
-      temperature: 35,
-      temperatureUnit: "F",
-      windSpeed: "30 to 40 mph",
-      windDirection: "NE",
-      icon: "https://api.weather.gov/icons/land/night/tsra_hi,30?size=medium",
-      shortForecast: "Chance Showers And Thunderstorms",
-      probabilityOfPrecipitation: 30
-    }
-  ];
-  const currObs = {
-      description: "Sunny with a few Clouds. Lots of precipitation on the ground",
-      temperature: 70,
-      max_temp_last_24_hours: 80,
-      min_temp_last_24_hours: 54,
-      precipitation_last_6_hours: 20,
-      humidity: 20,
-      pressure: 820,
-      wind_speed: 4,
-      wind_gust : 15,
-      wind_direction: 50,
-      observation_time: "10:10"
-  };
-
-  const mountainInfo = {
-    mountain_name: "Test Vail",
-    location_name : "Test Vail, CO",
-    lattitude: 39.606144,
-    longitude:-106.354972,
-    avg_rating: 4.0,
-    peak_elevation: 11570
-  };
-  const paired = [];
-  for (let i = 0; i < periodsTest.length; i += 2) {
-    paired.push([periodsTest[i], periodsTest[i + 1]]);
-  }
-  res.render('pages/mountain', {
-    reviews: [
-      {
-        username: "John Doe",
-        review_id: 1,
-        review: "This is an amazing mountain. Highly recommend",
-        date_posted: "2025-04-06",
-        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
-        rating: 4.5
-      },
-      {
-        username: "Jane Smith",
-        review_id: 2,
-        review: "It was okay.",
-        date_posted: "2025-04-05",
-        rating: 3.5
-      },
-      {
-        username: "Alex Johnson",
-        review_id: 3,
-        review: "This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. ",
-        date_posted: "2025-04-04",
-        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
-        rating: 4.0
-      }
-    ], apiKey : process.env.API_KEY,
-      periods : paired,
-      currentObservations: currObs,
-      mountain: mountainInfo
-  });
-});
-*/
-
 
 
 app.get('/test', (req, res) => {
@@ -570,6 +446,9 @@ app.post('/login', async (req, res) => {
 app.get('/mountain/:id', async (req, res) => {
   const mountainId = req.params.id;
   const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
+  const passesQuery = `SELECT passes.pass_name FROM passes
+JOIN mountains_to_passes ON passes.pass_id = mountains_to_passes.pass_id
+WHERE mountains_to_passes.mountain_id = $1;`
   const reviewQuery =`SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
   JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
   JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
@@ -580,23 +459,55 @@ app.get('/mountain/:id', async (req, res) => {
   db.oneOrNone(query, [mountainId])
     .then(async (mountain) => {
       if (mountain) {
-        db.any(reviewQuery, [mountainId]).then(reviews => {
-          res.render('pages/mountain', {
-            user: req.session.user,
-            mountain_id: mountain.mountain_id,
-            mountain_name: mountain.mountain_name,
-            location_name: mountain.location_name,
-            latitude: mountain.latitude,
-            longitude: mountain.longitude,
-            avg_rating: mountain.avg_rating,
-            peak_elevation: mountain.peak_elevation,
-            reviews: reviews,
-            apiKey : process.env.GOOGLE_MAPS_API_KEY
-          });
-        })
-        .catch(err => {
-          console.error('Error fetching reviews:', err);
-        });
+        const [passes, reviews] = await Promise.all([
+          db.any(passesQuery, [mountainId]),
+          db.any(reviewQuery, [mountainId])
+        ]);
+        try {
+            const response = await axios.get(`http://localhost:3000/weather`, {
+              params: { nws_zone: mountain.nws_zone}
+            });
+            const weather_observations = response.data.data;
+            if (weather_observations && weather_observations.humidity != null) {
+              weather_observations.humidity = Math.round(weather_observations.humidity);
+            }
+            const fieldsToCheck = [
+              'max_temp_last_24_hours',
+              'min_temp_last_24_hours',
+              'precipitation_last_hour',
+              'precipitation_last_3_hours',
+              'precipitation_last_6_hours',
+              'wind_speed',
+              'wind_gust',
+              'wind_direction'
+            ];
+            
+            fieldsToCheck.forEach(field => {
+              if (weather_observations[field] == null) {
+                weather_observations[field] = '--(Not found)--';
+              }
+            });
+            const passString = passes.map(p => p.pass_name).join(', ');
+            res.render('pages/mountain', {
+              user: req.session.user,
+              mountain_id: mountain.mountain_id,
+              mountain_name: mountain.mountain_name,
+              location_name: mountain.location_name,
+              latitude: mountain.latitude,
+              longitude: mountain.longitude,
+              avg_rating: mountain.avg_rating,
+              peak_elevation: mountain.peak_elevation,
+              reviews: reviews,
+              apiKey : process.env.GOOGLE_MAPS_API_KEY,
+              nws_zone : mountain.nws_zone,
+              passes: passString,
+              currentObservations: weather_observations
+            });
+
+            
+        } catch (error) {
+          res.status(500).json({ error: 'Internal request failed', details: error });
+        }
         
       } else {
         res.render('pages/mountain', {
