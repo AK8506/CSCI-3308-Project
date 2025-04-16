@@ -73,8 +73,9 @@ CREATE TABLE forecasts (
   forecast_office VARCHAR(3) NOT NULL,
   grid_x INTEGER NOT NULL,
   grid_y INTEGER NOT NULL,
-  name VARCHAR(30) NOT NULL,
   generation_time TIMESTAMP NOT NULL,
+  period_number INTEGER NOT NULL,
+  period_name VARCHAR(30) NOT NULL,
   temperatureUnit VARCHAR(10),
   temperature INTEGER,
   windSpeed VARCHAR(20),
@@ -82,7 +83,7 @@ CREATE TABLE forecasts (
   icon VARCHAR(100),
   shortForecast VARCHAR(60),
   probabilityOfPrecipitation INTEGER,
-  PRIMARY KEY(forecast_office, grid_x, grid_y, generation_time)
+  PRIMARY KEY(forecast_office, grid_x, grid_y, generation_time, period_number)
 );
 
 DROP TABLE IF EXISTS reviews_to_images;
