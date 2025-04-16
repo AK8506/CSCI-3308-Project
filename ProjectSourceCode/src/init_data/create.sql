@@ -51,7 +51,7 @@ CREATE TABLE mountains (
 
 DROP TABLE IF EXISTS weather;
 CREATE TABLE weather (
-  nws_zone VARCHAR(10),
+  nws_zone VARCHAR(10) NOT NULL,
   observation_time TIMESTAMP NOT NULL,
   temperature DECIMAL,
   pressure DECIMAL,
@@ -66,6 +66,23 @@ CREATE TABLE weather (
   wind_gust DECIMAL,
   wind_direction INTEGER,
   PRIMARY KEY(nws_zone, observation_time)
+);
+
+DROP TABLE IF EXISTS forecasts;
+CREATE TABLE forecasts (
+  forecast_office VARCHAR(3) NOT NULL,
+  grid_x INTEGER NOT NULL,
+  grid_y INTEGER NOT NULL,
+  name VARCHAR(30) NOT NULL,
+  generation_time TIMESTAMP NOT NULL,
+  temperatureUnit VARCHAR(10),
+  temperature INTEGER,
+  windSpeed VARCHAR(20),
+  windDirection VARCHAR(3),
+  icon VARCHAR(100),
+  shortForecast VARCHAR(60),
+  probabilityOfPrecipitation INTEGER,
+  PRIMARY KEY(forecast_office, grid_x, grid_y, generation_time)
 );
 
 DROP TABLE IF EXISTS reviews_to_images;

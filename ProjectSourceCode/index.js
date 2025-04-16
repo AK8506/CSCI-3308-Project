@@ -115,19 +115,20 @@ app.get('/review_images', (req, res) => {
   });
 
 
-app.get('/weather', (req, res) => { // TODO change first db call to use mountain_name and get 
+app.get('/weather', (req, res) => { 
   // This function gets weather data from our db or from NWS api if cached data is too old.
   var mountain_name = req.query.mountain_name;
     
-  // First get NWS zone from database
-  var query = `select * from mountains left join weather on mountains.nws_zone = weather.nws_zone
-               where mountain_name = $1 order by observation_time desc limit 1;`
+  // First get NWS zone and last cached observation from database
+  var query = `select mountains.nws_zone as mountain_nws, weather.* from mountains left join weather on mountains.nws_zone = weather.nws_zone
+              where mountain_name = $1 order by observation_time desc limit 1;` 
+
   var values = [mountain_name];
   db.oneOrNone(query, values)
     .then(data => {
       if (!data.observation_time){ // no previous observations for this zone
         var diffInMs = Infinity;
-      } else {
+      } else { // check if more recent than 1 hour ago
         var observation_time = new Date(data.observation_time);
         var current_time = new Date();
         console.log(observation_time);
@@ -135,7 +136,7 @@ app.get('/weather', (req, res) => { // TODO change first db call to use mountain
         var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
       }
       if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
-        var nws_zone = data.nws_zone;
+        var nws_zone = data.mountain_nws;  // get nws zone for the mountain
         axios({
           url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
           method: 'GET'
@@ -143,6 +144,7 @@ app.get('/weather', (req, res) => { // TODO change first db call to use mountain
           // Now update weather table
           var observation = results.data.features[0].properties;
           var time = observation.timestamp;
+          // For each data point, make sure it is in the json before accessing
           if ('temperature' in observation){
             var temperature = observation.temperature.value;
           } else {
@@ -248,139 +250,151 @@ app.get('/weather', (req, res) => { // TODO change first db call to use mountain
   });
 });
 
-// WORKING SECTION
 
-
-app.get('/forecast', (req, res) => {
-  // This function gets weather data from our db or from NWS api if cached data is too old.
-  var mountain_name = req.query.mountain_name;
+// app.get('/forecasts', (req, res) => {
+//   // This function gets forecast data from our db or from NWS api if cached data is too old.
+//   var mountain_name = req.query.mountain_name;
+//   var query = `select mountains.forecast_office as mtn_forecast_office,
+//        mountains.grid_x as mtn_grid_x, mountains.grid_y as mtn_grid_y, forecasts.* from mountains
+//         left join forecasts
+//          on mountains.forecast_office = forecasts.forecast_office
+//           and mountains.grid_x = forecasts.grid_x
+//           and mountains.grid_y = forecasts.grid_y
+//         where mountain_name = $1 order by generation_time desc;`
  
-  // First get NWS zone from database
-  var query = `select * from forecasts where nws_zone = $1 order by observation_time desc limit 1;`
-  var values = [nws_zone];
-  db.oneOrNone(query, values)
-    .then(data => {
-      if (!data){ // no previous observations for this zone
-        var diffInMs = Infinity;
-      } else {
-        var observation_time = new Date(data.observation_time);
-        var current_time = new Date();
-        console.log(observation_time);
-        console.log(current_time);
-        var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
-      }
-      if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
-        axios({
-          url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
-          method: 'GET'
-        }).then(results => {
-          // Now update weather table
-          var observation = results.data.features[0].properties;
-          var time = observation.timestamp;
-          if ('temperature' in observation){
-            var temperature = observation.temperature.value;
-          } else {
-            var temperature = null;
-          }
-          if ('windSpeed' in observation){
-            var wind_speed = observation.windSpeed.value;
-          } else {
-            var wind_speed = null;
-          }
-          if ('windGust' in observation){
-            var wind_gust = observation.windGust.value;
-          } else {
-            var wind_gust = null;
-          }
-          if ('windDirection' in observation){
-            var wind_direction = observation.windDirection.value;
-          } else {
-            var wind_direction = null;
-          }
-          if ('barometricPressure' in observation){
-            var pressure = observation.barometricPressure.value;
-          } else {
-            var pressure = null;
-          }
-          if ('relativeHumidity' in observation){
-            var humidity = observation.relativeHumidity.value;
-          } else {
-            var humidity = null;
-          }
-          if ('textDescription' in observation){
-            var description = observation.textDescription;
-          } else {
-            var description = null;
-          }
-          if ('minTemperatureLast24Hours' in observation){
-            var min_temp = observation.minTemperatureLast24Hours.value;
-          } else {
-            var min_temp = null;
-          }
-          if ('maxTemperatureLast24Hours' in observation){
-            var max_temp = observation.maxTemperatureLast24Hours.value;
-          } else {
-            var max_temp = null;
-          }
-          if ('precipitationLastHour' in observation){
-            var prec_last_hour = observation.precipitationLastHour.value;
-          } else {
-            var prec_last_hour = null;
-          }
-          if ('precipitationLast3Hours' in observation){
-            var prec_last_3_hours = observation.precipitationLast3Hours.value;
-          } else {
-            var prec_last_3_hours = null;
-          }
-          if ('precipitationLast6Hours' in observation){
-            var prec_last_6_hours = observation.precipitationLast6Hours.value;
-          } else {
-            var prec_last_6_hours = null;
-          }
+//   var values = [mountain_name];
+//   db.any(query, values) 
+//     .then(data => {
+//       res.status(200).json({
+//         data: data,
+//       });
+//       if (!data.generation_time){ // no previous observations for this zone
+//         var diffInMs = Infinity;
+//       } else {
+//         var generation_time = new Date(data.generation_time);
+//         var current_time = new Date();
+//         console.log(generation_time);
+//         console.log(current_time);
+//         var diffInMs = Math.abs(current_time.getTime() - generation_time.getTime());
+//       }
+//       if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
+//         var grid_x = data.grid_x;
+//         var grid_y = data.grid_y;
+//         var forecast_office = data.forecast_office;  // https://api.weather.gov/gridpoints/TOP/31,80/forecast 
+//         axios({  
+//           url: 'https://api.weather.gov/gridpoints/' + forecast_office + '/' + grid_x + ',' + grid_y + '/forecast',
+//           method: 'GET'
+//         }).then(results => {
+//           res.status(200).json({
+//             data: results,
+//           });
+//           // Now update weather table
+//           var observation = results.data.features[0].properties;
+//           var time = observation.timestamp;
+//           if ('temperature' in observation){
+//             var temperature = observation.temperature.value;
+//           } else {
+//             var temperature = null;
+//           }
+//           if ('windSpeed' in observation){
+//             var wind_speed = observation.windSpeed.value;
+//           } else {
+//             var wind_speed = null;
+//           }
+//           if ('windGust' in observation){
+//             var wind_gust = observation.windGust.value;
+//           } else {
+//             var wind_gust = null;
+//           }
+//           if ('windDirection' in observation){
+//             var wind_direction = observation.windDirection.value;
+//           } else {
+//             var wind_direction = null;
+//           }
+//           if ('barometricPressure' in observation){
+//             var pressure = observation.barometricPressure.value;
+//           } else {
+//             var pressure = null;
+//           }
+//           if ('relativeHumidity' in observation){
+//             var humidity = observation.relativeHumidity.value;
+//           } else {
+//             var humidity = null;
+//           }
+//           if ('textDescription' in observation){
+//             var description = observation.textDescription;
+//           } else {
+//             var description = null;
+//           }
+//           if ('minTemperatureLast24Hours' in observation){
+//             var min_temp = observation.minTemperatureLast24Hours.value;
+//           } else {
+//             var min_temp = null;
+//           }
+//           if ('maxTemperatureLast24Hours' in observation){
+//             var max_temp = observation.maxTemperatureLast24Hours.value;
+//           } else {
+//             var max_temp = null;
+//           }
+//           if ('precipitationLastHour' in observation){
+//             var prec_last_hour = observation.precipitationLastHour.value;
+//           } else {
+//             var prec_last_hour = null;
+//           }
+//           if ('precipitationLast3Hours' in observation){
+//             var prec_last_3_hours = observation.precipitationLast3Hours.value;
+//           } else {
+//             var prec_last_3_hours = null;
+//           }
+//           if ('precipitationLast6Hours' in observation){
+//             var prec_last_6_hours = observation.precipitationLast6Hours.value;
+//           } else {
+//             var prec_last_6_hours = null;
+//           }
           
-          query = `DELETE from weather where nws_zone = $1; INSERT INTO weather
-      (nws_zone, observation_time, temperature, pressure, humidity, description,
-      max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
-        precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
-      VALUES
-      (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-      ) returning *;`
-      values = [nws_zone, time, temperature, pressure, humidity, description, max_temp, min_temp, prec_last_hour,
-        prec_last_3_hours, prec_last_6_hours, wind_speed, wind_gust, wind_direction];
-      db.one(query, values)
-      .then(data => {
-        res.status(200).json({
-          data: data,
-        });
-      })
-      .catch(err => {
-        res.status(400).json({
-          message: 'Error inserting weather into db',
-          error: err,
-        });
-      });
+//           query = `DELETE from weather where nws_zone = $1; INSERT INTO weather
+//       (nws_zone, observation_time, temperature, pressure, humidity, description,
+//       max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
+//         precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
+//       VALUES
+//       (
+//           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+//       ) returning *;`
+//       values = [nws_zone, time, temperature, pressure, humidity, description, max_temp, min_temp, prec_last_hour,
+//         prec_last_3_hours, prec_last_6_hours, wind_speed, wind_gust, wind_direction];
+//       db.one(query, values)
+//       .then(data => {
+//         res.status(200).json({
+//           data: data,
+//         });
+//       })
+//       .catch(err => {
+//         res.status(400).json({
+//           message: 'Error inserting weather into db',
+//           error: err,
+//         });
+//       });
           
-        })
-        .catch(err => {
-          res.status(400).json({
-            message: 'Error getting observations from NWS api' +  ' https://api.weather.gov/zones/forecast/' + nws_zone + '/observations',
-            error: err,
-          });
-        });
-      } else {  // stored weather data in db is up to date, return it
-        res.status(200).json({
-          data: data,
-        });
-      }
-    })
-    .catch(err => {
-      res.status(400).json({
-        message: 'Error getting cached weather data',
-        error: err,
-    });
-  });
-});
+//         })
+//         .catch(err => {
+//           res.status(400).json({
+//             message: 'Error getting observations from NWS api' +  ' https://api.weather.gov/gridpoints/' + forecast_office + '/' + grid_x + ',' + grid_y + '/forecast',
+//             error: err,
+//           });
+//         });
+//       } else {  // stored weather data in db is up to date, return it
+//         res.status(200).json({
+//           data: data,
+//         });
+//       }
+//     })
+//     .catch(err => {
+//       res.status(400).json({
+//         message: 'Error getting cached weather data',
+//         error: err,
+//     });
+//   });
+// });
 
 
 app.post('/update_nws_point', (req, res) => {
