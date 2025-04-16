@@ -52,12 +52,6 @@ limits: {
 });
 
 
-app.use(session({
-  secret: 'super duper secret',  // Secret key to sign the session ID cookie
-  resave: false,              // Don't resave session if it wasn't modified
-  saveUninitialized: false,    // Save session even if not modified
-}));
-
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
@@ -109,7 +103,6 @@ app.use(
     extended: true,
   })
 );
-app.use(express.static(__dirname + '/'));
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 app.get('/', (req, res) => {
@@ -574,6 +567,53 @@ app.post('/login', async (req, res) => {
     });
 });
 
+app.get('/mountain/:id', async (req, res) => {
+  const mountainId = req.params.id;
+  const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
+  const reviewQuery =`SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
+  JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
+  JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
+  LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
+  LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
+  WHERE mountains.mountain_id = $1`;
+  
+  db.oneOrNone(query, [mountainId])
+    .then(async (mountain) => {
+      if (mountain) {
+        db.any(reviewQuery, [mountainId]).then(reviews => {
+          res.render('pages/mountain', {
+            user: req.session.user,
+            mountain_id: mountain.mountain_id,
+            mountain_name: mountain.mountain_name,
+            location_name: mountain.location_name,
+            latitude: mountain.latitude,
+            longitude: mountain.longitude,
+            avg_rating: mountain.avg_rating,
+            peak_elevation: mountain.peak_elevation,
+            reviews: reviews,
+            apiKey : process.env.GOOGLE_MAPS_API_KEY
+          });
+        })
+        .catch(err => {
+          console.error('Error fetching reviews:', err);
+        });
+        
+      } else {
+        res.render('pages/mountain', {
+          user: req.session.user,
+          message: 'Mountain not found',
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.render('pages/mountain', {
+        user: req.session.user,
+        message: 'Error fetching mountain data',
+      });
+    });
+});
+
 const auth = (req, res, next) => {
   if (req.session && !req.session.user) {
     return res.redirect('/login');
@@ -605,41 +645,12 @@ app.get('/logout', (req, res) => {
 
 // -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
 
-app.get('/mountain/:id', (req, res) => {
-  const mountainId = req.params.id;
-  const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
 
-  db.oneOrNone(query, [mountainId])
-    .then((mountain) => {
-      if (mountain) {
-        res.render('pages/mountain', {
-          user: req.session.user,
-          mountain_name: mountain.mountain_name,
-          location_name: mountain.location_name,
-          latitude: mountain.latitude,
-          longitude: mountain.longitude,
-          avg_rating: mountain.avg_rating,
-          peak_elevation: mountain.peak_elevation,
-        });
-      } else {
-        res.render('pages/mountain', {
-          user: req.session.user,
-          message: 'Mountain not found',
-        });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.render('pages/mountain', {
-        user: req.session.user,
-        message: 'Error fetching mountain data',
-      });
-    });
-});
 
 // Path for user to post a review of a mountain
-app.post('/mountain/:id', <u>upload.single('file')</u> , async (req, res) => {
-  const mountainId = req.params.id;
+app.post('/mountain/:id', upload.single('file') , async (req, res) => {
+  //const mountainId = req.params.id;
+  const mountainId = 1;
   const username = req.session.user.username;
   const review = req.body.review;
   const date_posted = new Date();
@@ -658,16 +669,15 @@ app.post('/mountain/:id', <u>upload.single('file')</u> , async (req, res) => {
     VALUES($1, $2) 
     RETURNING image_id
   `;
-  const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id)
-  VALUES ($1, $2)`;
-  <u>const filePath = req.file ? req.file.path : null;</u>
+  const filePath = req.file ? req.file.path : null;
+  const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
   db.one(insertReviewQuery, [username, review, date_posted, rating])
     .then((result) => {
       const reviewId = result.review_id;
       
       //insert into image table
-      db.one(insertImageQuery, [<u>filePath</u>, image_cap])
+      db.one(insertImageQuery, [filePath, image_cap])
         .then((result) => {
           const imageID = result.image_id;
           //link review id to image id
@@ -691,7 +701,6 @@ app.post('/mountain/:id', <u>upload.single('file')</u> , async (req, res) => {
       res.render('pages/mountain', { message: 'Error posting review' });
     });
 });
-
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 if (require.main === module) {

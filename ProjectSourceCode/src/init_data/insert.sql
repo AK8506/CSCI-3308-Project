@@ -19,7 +19,7 @@ INSERT INTO reviews
         'test2', 'I love this place', '2023-01-04', 5.0
     ),
     (
-        'test1', 'Not much snow unfortunately', '2023-05-04', 2.2
+        'test1', 'Not much snow unfortunately', '2023-05-04', 2.5
     );
 
 INSERT INTO mountains
@@ -37,16 +37,16 @@ INSERT INTO images
     (image_url, image_cap)
     VALUES
     (
-        'testing.com', 'Testing image'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image'
     ),
     (
-        'testing2.com', 'Testing image2'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image2'
     ),
     (
-        'testing3.com', 'Testing image3'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image3'
     ),
     (
-        'testing4.com', 'Testing image4'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image4'
     );
 
 INSERT INTO mountains_to_reviews
@@ -66,7 +66,7 @@ INSERT INTO mountains_to_images
     (mountain_id, image_id)
     VALUES
     (
-        0, 2
+        1, 2
     );   
 
 
@@ -78,7 +78,7 @@ INSERT INTO reviews_to_images
 
     ),
     (
-        2, 3
+        3, 3
     ),
     (
         1, 2

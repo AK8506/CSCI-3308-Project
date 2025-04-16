@@ -9,7 +9,7 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews (
   review_id SERIAL PRIMARY KEY,
-  username VARCHAR(50) REFERENCES users(username),
+  username VARCHAR(50),
   review TEXT,
   date_posted DATE NOT NULL,
   rating DECIMAL NOT NULL
