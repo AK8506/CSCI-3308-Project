@@ -142,7 +142,7 @@ app.use(auth);
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
     req.session.destroy(function (err) {
-      res.render('pages/logout');
+      res.render('pages/home');
     });
   });
 
