@@ -549,8 +549,7 @@ app.get('/logout', (req, res) => {
 
 // Path for user to post a review of a mountain
 app.post('/mountain/:id', upload.single('file') , async (req, res) => {
-  //const mountainId = req.params.id;
-  const mountainId = 1;
+  const mountainId = req.params.id;
   const username = req.session.user.username;
   const review = req.body.review;
   const date_posted = new Date();
@@ -565,11 +564,12 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
   `;
 
   const insertImageQuery = `
-    INSERT INTO images(<u>image_url</u>, image_cap) 
+    INSERT INTO images(image_url, image_cap) 
     VALUES($1, $2) 
     RETURNING image_id
   `;
-  const filePath = req.file ? req.file.path : null;
+  const filePath = req.file ? `/${req.file.path}` : null;
+  console.log(filePath);
   const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
   db.one(insertReviewQuery, [username, review, date_posted, rating])

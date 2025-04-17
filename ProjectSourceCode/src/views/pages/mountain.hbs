@@ -91,7 +91,7 @@
 
             <div class="row text-center">
                 <div class="col-md-4 mb-3">
-                <p><strong>Temperature:</strong> {{ currentObservations.temperature }} °C</p>
+                <p><strong>Temperature:</strong> {{ currentObservations.temperature }} °F</p>
                 <p><strong>Max Temp (Past 24h):</strong> {{ currentObservations.max_temp_last_24_hours }} °F</p>
                 <p><strong>Min Temp (Past 24h):</strong> {{ currentObservations.min_temp_last_24_hours }} °F</p>
                 </div>
@@ -145,6 +145,46 @@
     </div>
     <div class="w-100 py-4 text-center" style="background-color: #84a5c7; color: white;">
         <h1 class="m-0">Reviews</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+          Write a Review
+        </button>
+    </div>
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form class="modal-content bg-white text-dark" action="/mountain/{{mountain_id}}" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reviewModalLabel">Write Your Review</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="review" class="form-label">Your Review</label>
+              <textarea class="form-control" id="review" name="review" rows="3" required></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label for="rating" class="form-label">Rating (1-5)</label>
+              <input type="number" class="form-control" id="rating" name="rating" min="0.5" max="5" step="0.5" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="image_cap" class="form-label">Image Caption</label>
+              <input type="text" class="form-control" id="image_cap" name="image_cap">
+            </div>
+
+            <div class="mb-3">
+              <label for="file" class="form-label">Upload an Image</label>
+              <input type="file" class="form-control" id="file" name="file" accept="image/*">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Submit Review</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
     <div class="container mt-4">
         <div class="card" style="max-height: 600px; overflow-y: auto;">
