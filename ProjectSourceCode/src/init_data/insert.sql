@@ -20,6 +20,8 @@ INSERT INTO reviews
     ),
     (
         'test1', 'Not much snow unfortunately', '2023-05-04', 2.2
+    ),
+
     );
 
 INSERT INTO mountains
@@ -30,7 +32,36 @@ INSERT INTO mountains
     ),
     (
         'TestMT2', 'Testing City2', 36.01, -106.7, 'Ikon', 4.2, 15000
-
+    ),
+    (
+        'Aspen Mountain', 'Aspen', 39.1875, -106.8167, NULL, 11212
+    ),
+    (
+        'Breckenridge', 'Breckenridge', 39.4817, -106.0384, NULL, 12998
+    ),
+    (
+        'Vail', 'Vail', 39.6403, -106.3742, NULL, 11570
+    ),
+    (
+        'Keystone', 'Keystone', 39.5792, -105.9347, NULL, 12408
+    ),
+    (
+        'Copper Mountain', 'Copper Mountain', 39.5022, -106.1511, NULL, 12313
+    ),
+    (
+        'Steamboat', 'Steamboat Springs', 40.4850, -106.8317, NULL, 10568
+    ),
+    (
+        'Telluride', 'Telluride', 37.9375, -107.8123, NULL, 13150
+    ),
+    (
+        'Winter Park', 'Winter Park', 39.8917, -105.7631, NULL, 12060
+    ),
+    (
+        'Crested Butte', 'Crested Butte', 38.8990, -106.9659, NULL, 12162
+    ),
+    (
+        'Arapahoe Basin', 'Dillon', 39.6425, -105.8719, NULL, 13050
     );
 
 INSERT INTO images
@@ -75,7 +106,6 @@ INSERT INTO reviews_to_images
     VALUES
     (
         2, 4
-
     ),
     (
         2, 3
@@ -85,7 +115,7 @@ INSERT INTO reviews_to_images
     );   
 
 
-INSERT INTO passes 
+INSERT INTO passes
     (pass_name)
     VALUES
     (
@@ -93,12 +123,52 @@ INSERT INTO passes
     ),
     (
         'Test pass 2'
+    ),
+    (
+        'Ikon Pass'
+    ),
+    (
+        'Epic Pass'
     );
 
-INSERT INTO mountains_to_passes 
+-- reference the following sites for passes:
+-- https://www.epicpass.com/
+-- https://www.ikonpass.com/
+-- https://mountaincollective.com/
+
+INSERT INTO mountains_to_passes
     (mountain_id, pass_id)
     VALUES
     (
-        1,1
+        1, 1 -- Test pass 1 at TestMT
+    ),
+    (
+        3, 3 -- Ikon Pass at Aspen Mountain
+    ),
+    (
+        4, 4 -- Epic Pass at Breckenridge
+    ),
+    (
+        5, 4 -- Epic Pass at Vail
+    ),
+    (
+        9, 4 -- Epic Pass at Telluride
+    ),
+    (
+        7, 3 -- Ikon Pass at Copper Mountain
+    ),
+    (
+        8, 3 -- Ikon Pass at Steamboat
+    ),
+    (
+        10, 3 -- Ikon Pass at Winter Park
+    ),
+    (
+        12, 3 -- Ikon Pass at Arapahoe Basin
+    ),
+    (
+        6, 4 -- Epic Pass at Keystone
+    ),
+    (
+        11, 4 -- Epic Pass at Crested Butte
     );
-
