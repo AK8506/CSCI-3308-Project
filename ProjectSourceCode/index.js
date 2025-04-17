@@ -58,9 +58,6 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
 app.use(express.static(__dirname + '/'));
-
-
-
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -115,7 +112,7 @@ app.get('/review_images', (req, res) => {
   });
 
   
-  function get_forecast(mountain_name){
+  async function get_forecast(mountain_name){
     var query = `select mountains.forecast_office as mtn_forecast_office,
          mountains.grid_x as mtn_grid_x, mountains.grid_y as mtn_grid_y, forecasts.* from mountains
           left join forecasts
@@ -125,8 +122,10 @@ app.get('/review_images', (req, res) => {
           where mountain_name = $1 order by generation_time desc, period_number asc;`
    
     var values = [mountain_name];
-    db.any(query, values) // This will be an array of forecast information for each upcoming period
-      .then(data => {
+
+    try {
+      const data = await db.any(query, values); // This will be an array of forecast information for each upcoming period
+
         if (!data[0].generation_time){ // no previous observations for this zone
           var diffInMs = Infinity;
         } else {
@@ -140,10 +139,10 @@ app.get('/review_images', (req, res) => {
           var grid_x = data[0].mtn_grid_x;
           var grid_y = data[0].mtn_grid_y;
           var forecast_office = data[0].mtn_forecast_office;  // https://api.weather.gov/gridpoints/TOP/31,80/forecast 
-          axios({  
+          const results = await axios({  
             url: 'https://api.weather.gov/gridpoints/' + forecast_office + '/' + grid_x + ',' + grid_y + '/forecast',
             method: 'GET'
-          }).then(results => {
+          });
             // Now update forecasts table
             var forecast = results.data.properties;
             var generation_time = forecast.generatedAt;
@@ -211,26 +210,16 @@ app.get('/review_images', (req, res) => {
             temperature, windSpeed, windDirection, icon, shortForecast, probabilityOfPrecipitation)
            VALUES ` + values_str + ` returning *`
            values = [forecast_office, grid_x, grid_y];
-        db.any(query, values)
-        .then(results => {
-          return results;
-        })
-        .catch(err => {
-          return [];
-        });
-            
-          })
-          .catch(err => {
-           return [];
-          });
+        const insertedData = db.any(query, values);
+          return {data: insertedData};
         } else {  // stored weather data in db is up to date, return it
-          return data;
+          return {data: data};
         }
-      })
-      .catch(err => {
-        return [];
-    });
+      } catch(err) {
+        return {error: err};
+    };
   }
+
 
 app.get('/weather', (req, res) => { 
   // This function gets weather data from our db or from NWS api if cached data is too old.
