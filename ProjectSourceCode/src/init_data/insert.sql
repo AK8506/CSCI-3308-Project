@@ -19,19 +19,17 @@ INSERT INTO reviews
         'test2', 'I love this place', '2023-01-04', 5.0
     ),
     (
-        'test1', 'Not much snow unfortunately', '2023-05-04', 2.2
-    ),
-
+        'test1', 'Not much snow unfortunately', '2023-05-04', 2.5
     );
 
 INSERT INTO mountains
-    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation)
+    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation, nws_zone)
     VALUES
     (
-        'TestMT', 'Testing City', 45, -116, 'Epic', 3.5, 12000
+        'TestMT', 'Testing City', 45, -116, 3.5, 12000, 'COZ010'
     ),
     (
-        'TestMT2', 'Testing City2', 36.01, -106.7, 'Ikon', 4.2, 15000
+        'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000, 'COZ010'
     ),
     (
         'Aspen Mountain', 'Aspen', 39.1875, -106.8167, NULL, 11212
@@ -68,16 +66,16 @@ INSERT INTO images
     (image_url, image_cap)
     VALUES
     (
-        'testing.com', 'Testing image'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image'
     ),
     (
-        'testing2.com', 'Testing image2'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image2'
     ),
     (
-        'testing3.com', 'Testing image3'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image3'
     ),
     (
-        'testing4.com', 'Testing image4'
+        'https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg', 'Testing image4'
     );
 
 INSERT INTO mountains_to_reviews
@@ -97,7 +95,7 @@ INSERT INTO mountains_to_images
     (mountain_id, image_id)
     VALUES
     (
-        0, 2
+        1, 2
     );   
 
 
@@ -108,7 +106,7 @@ INSERT INTO reviews_to_images
         2, 4
     ),
     (
-        2, 3
+        3, 3
     ),
     (
         1, 2
@@ -172,3 +170,4 @@ INSERT INTO mountains_to_passes
     (
         11, 4 -- Epic Pass at Crested Butte
     );
+

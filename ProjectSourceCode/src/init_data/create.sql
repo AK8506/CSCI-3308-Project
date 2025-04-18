@@ -9,7 +9,7 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS reviews;
 CREATE TABLE reviews (
   review_id SERIAL PRIMARY KEY,
-  username VARCHAR(50) REFERENCES users(username),
+  username VARCHAR(50),
   review TEXT,
   date_posted DATE NOT NULL,
   rating DECIMAL NOT NULL
@@ -18,21 +18,10 @@ CREATE TABLE reviews (
 DROP TABLE IF EXISTS images;
 CREATE TABLE images (
   image_id SERIAL PRIMARY KEY,
-  image_url VARCHAR(50) NOT NULL,
+  image_url VARCHAR(200) NOT NULL,
   image_cap VARCHAR(100) NOT NULL
 );
 
-DROP TABLE IF EXISTS mountains;
-CREATE TABLE mountains (
-  mountain_id SERIAL PRIMARY KEY,
-  mountain_name VARCHAR(100) NOT NULL,
-  location_name VARCHAR(100) NOT NULL,
-  latitude FLOAT NOT NULL,
-  longitude FLOAT NOT NULL,
-  avg_rating DECIMAL NOT NULL,
-  peak_elevation INT NOT NULL,
-  nws_zone VARCHAR(10)
-);
 
 DROP TABLE IF EXISTS mountains;
 CREATE TABLE mountains (
@@ -41,15 +30,17 @@ CREATE TABLE mountains (
   location_name VARCHAR(100) NOT NULL,
   latitude FLOAT NOT NULL,
   longitude FLOAT NOT NULL,
-  pass VARCHAR(100) NOT NULL,
   avg_rating DECIMAL NOT NULL,
   peak_elevation INT NOT NULL,
-  nws_zone VARCHAR(10)
+  nws_zone VARCHAR(10),
+  forecast_office VARCHAR(3),
+  grid_x INTEGER,
+  grid_y INTEGER
 );
 
 DROP TABLE IF EXISTS weather;
 CREATE TABLE weather (
-  nws_zone VARCHAR(10),
+  nws_zone VARCHAR(10) NOT NULL,
   observation_time TIMESTAMP NOT NULL,
   temperature DECIMAL,
   pressure DECIMAL,
@@ -64,6 +55,24 @@ CREATE TABLE weather (
   wind_gust DECIMAL,
   wind_direction INTEGER,
   PRIMARY KEY(nws_zone, observation_time)
+);
+
+DROP TABLE IF EXISTS forecasts;
+CREATE TABLE forecasts (
+  forecast_office VARCHAR(3) NOT NULL,
+  grid_x INTEGER NOT NULL,
+  grid_y INTEGER NOT NULL,
+  generation_time TIMESTAMP NOT NULL,
+  period_number INTEGER NOT NULL,
+  period_name VARCHAR(30) NOT NULL,
+  temperatureUnit VARCHAR(10),
+  temperature INTEGER,
+  windSpeed VARCHAR(20),
+  windDirection VARCHAR(3),
+  icon VARCHAR(100),
+  shortForecast VARCHAR(60),
+  probabilityOfPrecipitation INTEGER,
+  PRIMARY KEY(forecast_office, grid_x, grid_y, generation_time, period_number)
 );
 
 DROP TABLE IF EXISTS reviews_to_images;

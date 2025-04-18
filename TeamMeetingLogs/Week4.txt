@@ -1,0 +1,16 @@
+Meeting notes 4/14/25
+
+Overall no major roadblocks for anyone.
+
+What should the skeleton layout for the home page look like?
+	- We can have a few cards (like we did in a previous lab) with an image and highlighted brief info for that mountain, which links to the mountain's actual page. (Drawn in miro)
+	- Josh shared what home page looks like so far, also updated us that he made it in handlebars.
+	- Akshay is working on the search bar.
+	- Lance has written a function that can be used to make the stars div element.
+
+Mountain page
+	- Have not been able to store images on db yet, but in progress
+	- Google maps is working, we just need api key that Lance set up in our env vars to use it.
+	- Lance made a pull request with pretty much everything for this page, but it still needs to get real data from backend. (Akshay will get real data in this week).
+
+If we have time, we should design a cool logo. But first we are concerned with integrating all components and testing.
