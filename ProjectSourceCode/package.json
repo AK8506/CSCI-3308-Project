@@ -11,7 +11,8 @@
         "express-session": "1.17.3",
         "handlebars": "^4.7.8",
         "pg-promise": "^10.11.1",
-        "nodemon": "2.0.20"
+        "nodemon": "2.0.20",
+        "node-cron": "^3.0.3"
     },
     "devDependencies": {
     "nodemon": "^2.0.7",
