@@ -114,7 +114,44 @@ function kmhToMph(kmh) {
 }
 
 app.get('/', (req, res) => {
+  const mountainsTest = [
+    {
+      mountain_id: 1,
+      mountain_name: "Everpeak",
+      location_name: "Mystic Valley",
+      avg_rating: 4.5,
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgILv6V5CCG-GQr1lgP3bNbyW2ugdXSqCniQ&s"
+    },
+    {
+      mountain_id: 2,
+      mountain_name: "Stormridge",
+      location_name: "Highwind Plains",
+      avg_rating: 2,
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgILv6V5CCG-GQr1lgP3bNbyW2ugdXSqCniQ&s"
+    },
+    {
+      mountain_id: 3,
+      mountain_name: "Stormridge",
+      location_name: "Highwind Plains",
+      avg_rating: 2,
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgILv6V5CCG-GQr1lgP3bNbyW2ugdXSqCniQ&s"
+    },
+    {
+      mountain_id: 4,
+      mountain_name: "Stormridge",
+      location_name: "Highwind Plains",
+      avg_rating: 2,
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgILv6V5CCG-GQr1lgP3bNbyW2ugdXSqCniQ&s"
+    },
+    {
+      mountain_id: 5,
+      mountain_name: "Stormridge",
+      location_name: "Highwind Plains",
+      avg_rating: 2
+    }
+  ];
   res.render('pages/home', {
+    mountains:mountainsTest,
     user: req.session.user,
   });
 });
@@ -572,12 +609,28 @@ WHERE mountains_to_passes.mountain_id = $1;`
           db.any(reviewQuery, [mountainId])
         ]);
         const weather_response = await getWeatherData(mountain.nws_zone);
-        const weather_observations = weather_response.data; 
-
-        if (weather_observations && weather_observations.humidity != null) {
+        const weather_observations = weather_response.data != null ? weather_response.data : {
+          humidity:null,
+          barometricPressure : null,
+          temperature:null,
+          humidity:null,
+          max_temp_last_24_hours: null,
+          min_temp_last_24_hours: null,
+          precipitation_last_hour: null,
+          precipitation_last_3_hours: null,
+          precipitation_last_6_hours: null,
+          wind_speed: null,
+          wind_gust: null,
+          wind_direction: null
+        };
+        
+        if (weather_observations.humidity != null) {
           weather_observations.humidity = Math.round(weather_observations.humidity);
         }
         const fieldsToCheck = [
+          'humidity',
+          'pressure',
+          'temperature',
           'max_temp_last_24_hours',
           'min_temp_last_24_hours',
           'precipitation_last_hour',
