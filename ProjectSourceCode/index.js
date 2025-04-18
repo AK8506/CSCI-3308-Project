@@ -7,13 +7,51 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const axios = require('axios'); 
 
-app.use(session({
-  secret: 'super duper secret',  // Secret key to sign the session ID cookie
-  resave: false,              // Don't resave session if it wasn't modified
-  saveUninitialized: false,    // Save session even if not modified
-}));
+const axios = require('axios'); 
+const fs = require('fs');
+const multer = require('multer');
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+	fs.mkdirSync(uploadDir, { recursive: true });
+	console.log('Created uploads directory');
+}
+
+// This allows serving static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+  cb(null, 'uploads/'); // Destination folder
+},
+
+filename: function(req, file, cb) {
+// Create unique filename with original extension
+ cb(null, Date.now() + '-' + file.originalname);
+}
+});
+
+// Set up file filter if you want to restrict file types
+
+const fileFilter = (req, file, cb) => {
+if (file.mimetype.startsWith('image/')) {
+cb(null, true);
+} else {
+  cb(new Error('Not an image! Please upload only images.'), false);
+ }
+};
+
+const upload = multer({
+storage: storage,
+limits: {
+   fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
+ },
+ fileFilter: fileFilter
+});
+
 
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
@@ -25,8 +63,8 @@ const hbs = handlebars.create({
 
 // database configuration
 const dbConfig = {
-  host: 'db', // the database server
-  port: 5432, // the database port
+  host: process.env.HOST, // the database server
+  port: process.env.PORT, // the database port
   database: process.env.POSTGRES_DB, // the database name
   user: process.env.POSTGRES_USER, // the user account to connect with
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
@@ -63,8 +101,17 @@ app.use(
     extended: true,
   })
 );
-app.use(express.static(__dirname + '/'));
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
+
+function mmToInches(mm) {
+  return Math.round(mm / 25.4 * 10) /10;
+}
+function cToF(celsius) {
+  return (Math.round(celsius * 9/5 * 10)/10 + 32);
+}
+function kmhToMph(kmh) {
+  return Math.round(kmh * 0.621371 * 10) / 10;
+}
 
 app.get('/', (req, res) => {
   res.render('pages/home');
@@ -89,9 +136,9 @@ app.get('/reviews', (req, res) => {
         error: err,
       });
     });
-  });
+});
 
-  
+
 app.get('/review_images', (req, res) => {
   const review_id = req.query.review_id;
   const query = `select * from images where image_id in 
@@ -109,141 +156,9 @@ app.get('/review_images', (req, res) => {
         error: err,
       });
     });
-  });
+});
 
-
-  app.get('/weather', (req, res) => {
-    // This function gets weather data from our db or from NWS api if cached data is too old.
-    var nws_zone = req.query.nws_zone;
-  
-    // First get NWS zone from database
-    var query = `select * from weather where nws_zone = $1 order by observation_time desc limit 1;`
-    var values = [nws_zone];
-    db.oneOrNone(query, values)
-      .then(data => {
-        if (!data) { // no previous observations for this zone
-          var diffInMs = Infinity;
-        } else {
-          var observation_time = new Date(data.observation_time);
-          var current_time = new Date();
-          console.log(observation_time);
-          console.log(current_time);
-          var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
-        }
-        if (diffInMs > 1000 * 60 * 60) {  // stored data is outdated, update it first
-          axios({
-            url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
-            method: 'GET'
-          }).then(results => {
-            // Now update weather table
-            var observation = results.data.features[0].properties;
-            var time = observation.timestamp;
-            if ('temperature' in observation) {
-              var temperature = observation.temperature.value;
-            } else {
-              var temperature = null;
-            }
-            if ('windSpeed' in observation) {
-              var wind_speed = observation.windSpeed.value;
-            } else {
-              var wind_speed = null;
-            }
-            if ('windGust' in observation) {
-              var wind_gust = observation.windGust.value;
-            } else {
-              var wind_gust = null;
-            }
-            if ('windDirection' in observation) {
-              var wind_direction = observation.windDirection.value;
-            } else {
-              var wind_direction = null;
-            }
-            if ('barometricPressure' in observation) {
-              var pressure = observation.barometricPressure.value;
-            } else {
-              var pressure = null;
-            }
-            if ('relativeHumidity' in observation) {
-              var humidity = observation.relativeHumidity.value;
-            } else {
-              var humidity = null;
-            }
-            if ('textDescription' in observation) {
-              var description = observation.textDescription;
-            } else {
-              var description = null;
-            }
-            if ('minTemperatureLast24Hours' in observation) {
-              var min_temp = observation.minTemperatureLast24Hours.value;
-            } else {
-              var min_temp = null;
-            }
-            if ('maxTemperatureLast24Hours' in observation) {
-              var max_temp = observation.maxTemperatureLast24Hours.value;
-            } else {
-              var max_temp = null;
-            }
-            if ('precipitationLastHour' in observation) {
-              var prec_last_hour = observation.precipitationLastHour.value;
-            } else {
-              var prec_last_hour = null;
-            }
-            if ('precipitationLast3Hours' in observation) {
-              var prec_last_3_hours = observation.precipitationLast3Hours.value;
-            } else {
-              var prec_last_3_hours = null;
-            }
-            if ('precipitationLast6Hours' in observation) {
-              var prec_last_6_hours = observation.precipitationLast6Hours.value;
-            } else {
-              var prec_last_6_hours = null;
-            }
-  
-            query = `DELETE from weather where nws_zone = $1; INSERT INTO weather
-        (nws_zone, observation_time, temperature, pressure, humidity, description,
-        max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
-          precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
-        VALUES
-        (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-        ) returning *;`
-            values = [nws_zone, time, temperature, pressure, humidity, description, max_temp, min_temp, prec_last_hour,
-              prec_last_3_hours, prec_last_6_hours, wind_speed, wind_gust, wind_direction];
-            db.one(query, values)
-              .then(data => {
-                res.status(200).json({
-                  data: data,
-                });
-              })
-              .catch(err => {
-                res.status(400).json({
-                  message: 'Error inserting weather into db',
-                  error: err,
-                });
-              });
-  
-          })
-            .catch(err => {
-              res.status(400).json({
-                message: 'Error getting observations from NWS api' + ' https://api.weather.gov/zones/forecast/' + nws_zone + '/observations',
-                error: err,
-              });
-            });
-        } else {  // stored weather data in db is up to date, return it
-          res.status(200).json({
-            data: data,
-          });
-        }
-      })
-      .catch(err => {
-        res.status(400).json({
-          message: 'Error getting cached weather data',
-          error: err,
-        });
-      });
-  });
-  
-  
+ 
   async function get_forecast(mountain_name){
     var query = `select mountains.forecast_office as mtn_forecast_office,
          mountains.grid_x as mtn_grid_x, mountains.grid_y as mtn_grid_y, forecasts.* from mountains
@@ -352,6 +267,123 @@ app.get('/review_images', (req, res) => {
     };
   }
 
+async function getWeatherData(nws_zone) {
+  // This function gets weather data from our db or from NWS api if cached data is too old.
+  var query = `select * from weather where nws_zone = $1 order by observation_time desc limit 1;`
+  var values = [nws_zone];
+
+  try {
+    const data = await db.oneOrNone(query, values);
+
+    if (!data){ // no previous observations for this zone
+      var diffInMs = Infinity;
+    } else {
+      var observation_time = new Date(data.observation_time);
+      var current_time = new Date();
+      console.log(observation_time);
+      console.log(current_time);
+      var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
+    }
+
+    if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
+      const results = await axios({
+        url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
+        method: 'GET'
+      });
+
+      var observation = results.data.features[0].properties;
+      var time = observation.timestamp;
+
+      if ('temperature' in observation){
+        var temperature = cToF(observation.temperature.value);
+
+      } else {
+        var temperature = null;
+      }
+      if ('windSpeed' in observation){
+        var wind_speed = kmhToMph(observation.windSpeed.value);
+      } else {
+        var wind_speed = null;
+      }
+      if ('windGust' in observation){
+        var wind_gust = kmhToMph(observation.windGust.value);
+      } else {
+        var wind_gust = null;
+      }
+      if ('windDirection' in observation){
+        var wind_direction = observation.windDirection.value;
+      } else {
+        var wind_direction = null;
+      }
+      if ('barometricPressure' in observation){
+        var pressure = Math.round(observation.barometricPressure.value/100);
+      } else {
+        var pressure = null;
+      }
+      if ('relativeHumidity' in observation){
+        var humidity = observation.relativeHumidity.value;
+      } else {
+        var humidity = null;
+      }
+      if ('textDescription' in observation){
+        var description = observation.textDescription;
+      } else {
+        var description = null;
+      }
+      if ('minTemperatureLast24Hours' in observation && observation.minTemperatureLast24Hours && observation.minTemperatureLast24Hours.value !== null){
+        var min_temp = cToF(observation.minTemperatureLast24Hours.value);
+      } else {
+        var min_temp = null;
+      }
+      if ('maxTemperatureLast24Hours' in observation && observation.maxemperatureLast24Hours && observation.maxTemperatureLast24Hours.value !== null){
+        var max_temp = cToF(observation.maxTemperatureLast24Hours.value);
+      } else {
+        var max_temp = null;
+      }
+      if ('precipitationLastHour' in observation){
+        var prec_last_hour = mmToInches(observation.precipitationLastHour.value);
+      } else {
+        var prec_last_hour = null;
+      }
+      if ('precipitationLast3Hours' in observation){
+        var prec_last_3_hours = mmToInches(observation.precipitationLast3Hours.value);
+      } else {
+        var prec_last_3_hours = null;
+      }
+      if ('precipitationLast6Hours' in observation){
+        var prec_last_6_hours = mmToInches(observation.precipitationLast6Hours.value);
+      } else {
+        var prec_last_6_hours = null;
+      }
+
+      query = `DELETE from weather where nws_zone = $1; INSERT INTO weather
+
+      (nws_zone, observation_time, temperature, pressure, humidity, description,
+      max_temp_last_24_hours, min_temp_last_24_hours, precipitation_last_hour, precipitation_last_3_hours, 
+        precipitation_last_6_hours, wind_speed, wind_gust, wind_direction)
+      VALUES
+      (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      ) returning *;`;
+
+      values = [nws_zone, time, temperature, pressure, humidity, description, max_temp, min_temp, prec_last_hour,
+        prec_last_3_hours, prec_last_6_hours, wind_speed, wind_gust, wind_direction];
+
+      const insertedData = await db.one(query, values);
+      return { data: insertedData };
+
+    } else {  // stored weather data in db is up to date, return it
+      return { data: data };
+    }
+
+  } catch (err) {
+    return {
+      message: 'Error getting or inserting weather data',
+      error: err,
+    };
+  }
+}
+
 
 app.post('/update_nws_point', (req, res) => {
   // This function updates the NWS zone stored in the database for the mountain given in the parameters
@@ -366,6 +398,7 @@ app.post('/update_nws_point', (req, res) => {
       var lat = data.latitude;
       var long = data.longitude;
       var mountain_id = data.mountain_id;
+
       
       // Now call National Weather Service API to get zone, forecast office, and grid points
       axios({
@@ -378,31 +411,33 @@ app.post('/update_nws_point', (req, res) => {
         var grid_y = results.data.properties.gridY;
 
         zone = zone.split('forecast/')[1];
+
          // Finally update in our db
         var query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
         var values = [zone, forecast_office, grid_x, grid_y, mountain_id];
+
         db.one(query, values)
-        .then(data => {
-          res.status(200).json({
-            data: data,
+          .then(data => {
+            res.status(200).json({
+              data: data,
+            });
+
+          })
+          .catch(err => {
+            res.status(400).json({
+              message: 'Error updating zone in mountains table',
+              error: err,
+            });
           });
-  
-        })
+
+      })
         .catch(err => {
           res.status(400).json({
-            message: 'Error updating zone in mountains table',
+            message: 'Error getting zone from NWS',
             error: err,
           });
         });
-       
-      })
-      .catch(err => {
-        res.status(400).json({
-          message: 'Error getting zone from NWS',
-          error: err,
-        });
-      });
-  
+
     })
     .catch(err => {
       res.status(400).json({
@@ -411,7 +446,7 @@ app.post('/update_nws_point', (req, res) => {
       });
     });
 
-  });
+});
 
 
 app.get('/login', (req, res) => {
@@ -419,7 +454,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/welcome', (req, res) => {
-  res.json({status: 'success', message: 'Welcome!'});
+  res.json({ status: 'success', message: 'Welcome!' });
 });
 
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
@@ -429,39 +464,7 @@ app.get('/register', (req, res) => {
 });
 
 
-/*
-app.get('/mountain', (req, res) => {
-  res.render('pages/mountain', {
-    reviews: [
-      {
-        username: "John Doe",
-        review_id: 1,
-        review: "This is an amazing mountain. Highly recommend",
-        date_posted: "2025-04-06",
-        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
-        rating: 4.5
-      },
-      {
-        username: "Jane Smith",
-        review_id: 2,
-        review: "It was okay.",
-        date_posted: "2025-04-05",
-        rating: 3.5
-      },
-      {
-        username: "Alex Johnson",
-        review_id: 3,
-        review: "This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. This is a really long review that has been repeated quite a while to test the overflowing and fitting of the thing. ",
-        date_posted: "2025-04-04",
-        image: "https://i.insider.com/5980b7ca87543302234a1a57?width=800&format=jpeg&auto=webp",
-        rating: 4.0
-      }
-    ], apiKey : process.env.API_KEY,
-      lattitude: 39.606144,
-      longitude:-106.354972
-  });
-});
-*/
+
 
 app.get('/test', (req, res) => {
   res.status(302).redirect('/login');
@@ -472,44 +475,44 @@ app.post('/register', async (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
   const password = req.body.password;
-  if(username == null) {
+  if (username == null) {
     console.log('null');
-    res.status(400).render('pages/register', {message: 'username cannot be null'});
+    res.status(400).render('pages/register', { message: 'username cannot be null' });
   } else {
-  // check if username already exists
-  const query = 'SELECT * FROM users WHERE username = $1';
-  db.oneOrNone(query, [username])
-    .then(async (user) => {
-      if (user) {
-        // User already exists
-        res.render('pages/register', { message: 'Account already exists.' });
-      } else {
-        // Hash the password using bcrypt library
-        const hash = await bcrypt.hash(password, 10);
+    // check if username already exists
+    const query = 'SELECT * FROM users WHERE username = $1';
+    db.oneOrNone(query, [username])
+      .then(async (user) => {
+        if (user) {
+          // User already exists
+          res.render('pages/register', { message: 'Account already exists.' });
+        } else {
+          // Hash the password using bcrypt library
+          const hash = await bcrypt.hash(password, 10);
 
-        // Insert username and hashed password into the 'users' table
-        const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
-        db.none(insertQuery, [username, email, hash])
-          .then(() => {
-            res.status(200).render('pages/register', { message: 'Account created.' });
-          })
-          .catch((err) => {
-            console.log(err);
-            res.status(400).json ({
-              error: err
+          // Insert username and hashed password into the 'users' table
+          const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
+          db.none(insertQuery, [username, email, hash])
+            .then(() => {
+              res.status(200).render('pages/register', { message: 'Account created.' });
+            })
+            .catch((err) => {
+              console.log(err);
+              res.status(400).json({
+                error: err
+              });
+              res.render('pages/register', { message: 'Error creating account.' });
             });
-            res.render('pages/register', { message: 'Error creating account.' });
-          });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json({
-        error: err,
-        message: "bottom error"
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(400).json({
+          error: err,
+          message: "bottom error"
+        });
+        res.render('pages/register', { message: 'Error creating account.' });
       });
-      res.render('pages/register', { message: 'Error creating account.' });
-    });
   }
 });
 
@@ -549,57 +552,65 @@ app.post('/login', async (req, res) => {
     });
 });
 
-const auth = (req, res, next) => {
-  console.log("here with req session");
-  console.log(req.session);
-  if (req.session && !req.session.user) {
-    return res.redirect('/login');
-  }
-  next();
-}
-
-app.use(auth);
-
-
-app.get('/profile', (req, res) => {
-  console.log("Testing Here");
-  if (!req.session || !req.session.user) {
-    return res.status(401).send('Not authenticated');
-  }
-  try {
-    console.log(req.session.user.username);
-    res.status(200).json({
-      username: req.session.user.username,
-    });
-  } catch (err) {
-    console.error('Profile error:', err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-  });
-// -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
-
-// -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
-
-app.get('/mountain/:id', (req, res) => {
+app.get('/mountain/:id', async (req, res) => {
   const mountainId = req.params.id;
   const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
-
+  const passesQuery = `SELECT passes.pass_name FROM passes
+JOIN mountains_to_passes ON passes.pass_id = mountains_to_passes.pass_id
+WHERE mountains_to_passes.mountain_id = $1;`
+  const reviewQuery =`SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
+  JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
+  JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
+  LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
+  LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
+  WHERE mountains.mountain_id = $1`;
+  
   db.oneOrNone(query, [mountainId])
-    .then((mountain) => {
+    .then(async (mountain) => {
       if (mountain) {
+        const [passes, reviews] = await Promise.all([
+          db.any(passesQuery, [mountainId]),
+          db.any(reviewQuery, [mountainId])
+        ]);
+        const weather_response = await getWeatherData(mountain.nws_zone);
+        const weather_observations = weather_response.data; 
+
+        if (weather_observations && weather_observations.humidity != null) {
+          weather_observations.humidity = Math.round(weather_observations.humidity);
+        }
+        const fieldsToCheck = [
+          'max_temp_last_24_hours',
+          'min_temp_last_24_hours',
+          'precipitation_last_hour',
+          'precipitation_last_3_hours',
+          'precipitation_last_6_hours',
+          'wind_speed',
+          'wind_gust',
+          'wind_direction'
+        ];
+        
+        fieldsToCheck.forEach(field => {
+          if (weather_observations[field] == null) {
+            weather_observations[field] = '--(Not found)--';
+          }
+        });
+        const passString = passes.map(p => p.pass_name).join(', ');
         res.render('pages/mountain', {
           user: req.session.user,
+          mountain_id: mountain.mountain_id,
           mountain_name: mountain.mountain_name,
           location_name: mountain.location_name,
           latitude: mountain.latitude,
           longitude: mountain.longitude,
           avg_rating: mountain.avg_rating,
           peak_elevation: mountain.peak_elevation,
+          reviews: reviews,
+          apiKey : process.env.GOOGLE_MAPS_API_KEY,
+          nws_zone : mountain.nws_zone,
+          passes: passString,
+          currentObservations: weather_observations
         });
+        
       } else {
         res.render('pages/mountain', {
           user: req.session.user,
@@ -616,13 +627,52 @@ app.get('/mountain/:id', (req, res) => {
     });
 });
 
+const auth = (req, res, next) => {
+  if (req.session && !req.session.user) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
+app.use(auth);
+
+
+app.get('/profile', (req, res) => {
+  if (!req.session || !req.session.user) {
+    return res.status(401).send('Not authenticated');
+  }
+  try {
+    res.status(200).json({
+      username: req.session.user.username,
+    });
+  } catch (err) {
+    console.error('Profile error:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+});
+// -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
+app.get('/logout', (req, res) => {
+  req.session.destroy(function (err) {
+    res.render('pages/home');
+  });
+});
+
+// -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
+
+
+
 // Path for user to post a review of a mountain
-app.post('/mountain/:id', (req, res) => {
+app.post('/mountain/:id', upload.single('file') , async (req, res) => {
   const mountainId = req.params.id;
   const username = req.session.user.username;
   const review = req.body.review;
   const date_posted = new Date();
   const rating = req.body.rating;
+  image_cap = req.body.image_cap;
 
   // Insert the review into the reviews table
   const insertReviewQuery = `
@@ -631,9 +681,26 @@ app.post('/mountain/:id', (req, res) => {
     RETURNING review_id
   `;
 
+  const insertImageQuery = `
+    INSERT INTO images(image_url, image_cap) 
+    VALUES($1, $2) 
+    RETURNING image_id
+  `;
+  const filePath = req.file ? `/${req.file.path}` : null;
+  console.log(filePath);
+  const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
+
   db.one(insertReviewQuery, [username, review, date_posted, rating])
     .then((result) => {
       const reviewId = result.review_id;
+      
+      //insert into image table
+      db.one(insertImageQuery, [filePath, image_cap])
+        .then((result) => {
+          const imageID = result.image_id;
+          //link review id to image id
+          db.none(insertImageToReview, [reviewId, imageID]);
+        })
 
       // Link the review to the mountain in the mountains_to_reviews table
       const linkReviewQuery = `
@@ -653,10 +720,9 @@ app.post('/mountain/:id', (req, res) => {
     });
 });
 
-
 // -------------------------------------  START THE SERVER   ---------------------------------------
 if (require.main === module) {
   app.listen(3000, () => console.log('Server running'));
 }
-module.exports = {app, db};
+module.exports = { app, db };
 

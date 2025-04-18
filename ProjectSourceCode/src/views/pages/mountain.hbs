@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOUNTAIN NAME</title>
-    <script src="./src/views/pages/stars.js"></script>
+    <title>{{mountain_name}}</title>
+    <script src="/src/views/pages/stars.js"></script>
     <script>
     (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
     key: `{{apiKey}}`,
@@ -14,8 +14,8 @@
     <script type="module">
         async function loadMap() {
             await google.maps.importLibrary("maps");
-            const module = await import("./src/views/pages/map.js");
-            module.initMap({{lattitude}}, {{longitude}});
+            const module = await import("/src/views/pages/map.js");
+            module.initMap({{latitude}}, {{longitude}});
         }
     loadMap();
     </script>
@@ -32,20 +32,21 @@
     </style>
 </head>
 <body>
+    
 
-    <div class="p-3 mb-2 text-white" style="background-color: #4a7fb4;">
+    <div class="p-3 mb-2 text-white" style="background-color: #39628a;">
         <div class="card text-center mb-3" style="max-width: fit-content; margin-left: auto;margin-right: auto;">
             <img src="https://scene7.vailresorts.com/is/image/vailresorts/20220204_VL_DUNN_02:Large-Hero?resMode=sharp2&w=2880&h=900&wid=412&fit=vfit,1&hei=309&dpr=on,2.625"  alt="TEST IMAGE" style="max-width: 700px; max-height: 400px">
             <div class="card-body">
-                <h5 class="card-title">TEST MOUNTAIN</h5>
-                <p class="text">LOCATION: TEST MOUNTAIN LOCATION</p>
-                <p class="text">PASSES: TEST MOUNTAIN PASSES</p>
-                <p class="text">MAX ELEVATION: TEST MOUNTAIN MAX ELEVATION</p>
+                <h5 class="card-title">{{mountain_name}}</h5>
+                <p class="text">LOCATION: {{location_name}}</p>
+                <p class="text">PASSES: {{passes}}</p>
+                <p class="text">MAX ELEVATION: {{peak_elevation}} ft</p>
                 
                 <div class="container mt-4">
                     <div id="overall-star-rating" class="star-rating"></div>
                 </div>
-                <script> setStarRating_xl(2.5, 'overall-star-rating');</script>
+                <script> setStarRating_xl({{avg_rating}}, 'overall-star-rating');</script>
 
             </div>
         </div>
@@ -56,7 +57,7 @@
                 <img src="https://media.istockphoto.com/id/184867984/photo/chairlift.jpg?s=612x612&w=0&k=20&c=ALXfOK-pcMLjD_H5f9_2mWvFKiu_dX0quLVTIS30I78=" class="card-img-top" alt="Lifts and Infrastructure">
                 <div class="card-body">
                 <h5 class="card-title">Lifts and Infrastructure</h5>
-                <div id="lift-star-rating" class="star-rating"></div>
+                <div id="lift-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
                 <script> setStarRating_large(3.5, 'lift-star-rating');</script>
                 </div>
             </div>
@@ -65,7 +66,7 @@
         <img src="https://images.squarespace-cdn.com/content/v1/5e7a324590664f18b1bfea0c/1699319261524-Y4NXLAKXYFO6VZBEKJG5/kickinghorset1ridge.jpeg" class="card-img-top" alt="Difficulty">
         <div class="card-body">
           <h5 class="card-title">Difficulty</h5>
-          <div id="difficulty-star-rating" class="star-rating"></div>
+          <div id="difficulty-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
           <script> setStarRating_large(4.5, 'difficulty-star-rating');</script>
         </div>
       </div>
@@ -74,13 +75,116 @@
         <img src="https://snowbrains.com/wp-content/uploads/2023/01/faceshots-alta-ski-area-fb.jpg" class="card-img-top" alt="Snow Quality">
         <div class="card-body">
           <h5 class="card-title">Snow Quality</h5>
-          <div id="snow-star-rating" class="star-rating"></div>
+          <div id="snow-star-rating" class="star-rating" style="padding: 10px 5px;"></div>
           <script> setStarRating_large(4, 'snow-star-rating');</script>
         </div>
       </div>
     </div>
-    <div class="w-100 py-4 text-center" style="background-color: #39628a; color: white;">
+    <div class="w-100 py-4 text-center" style="background-color: #4a7ea0; color: white;">
+        <h1 class="m-0">Current Weather</h1>
+    </div>
+    
+    <div class="container-fluid py-4">
+        <div class="card bg-light shadow-lg">
+            <div class="card-body">
+            <h4 class="card-title text-center mb-4">{{currentObservations.description}}</h4>
+
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                <p><strong>Temperature:</strong> {{ currentObservations.temperature }} °F</p>
+                <p><strong>Max Temp (Past 24h):</strong> {{ currentObservations.max_temp_last_24_hours }} °F</p>
+                <p><strong>Min Temp (Past 24h):</strong> {{ currentObservations.min_temp_last_24_hours }} °F</p>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                <p><strong>Precipitation (Past 6h):</strong> {{ currentObservations.precipitation_last_6_hours }} in</p>
+                <p><strong>Humidity:</strong> {{ currentObservations.humidity }}%</p>
+                <p><strong>Pressure:</strong> {{ currentObservations.pressure }} hPa</p>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                <p><strong>Wind Speed:</strong> {{ currentObservations.wind_speed }} mph</p>
+                <p><strong>Wind Gust:</strong> {{ currentObservations.wind_gust }} mph</p>
+                <p><strong>Wind Direction:</strong> {{ currentObservations.wind_direction }}°</p>
+                </div>
+            </div>
+
+            <p class="text-center mt-4 text-muted">
+                <small>Last updated: {{ currentObservations.observation_time }}</small>
+            </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-100 py-4 text-center" style="background-color: #5c91b3; color: white;">
+        <h1 class="m-0">Forecast Weather</h1>
+    </div>
+
+    <div class="row">
+    {{#each periods}}
+      <div class="col-12 col-md-4 mb-4">
+        <div class="d-flex flex-column gap-3 h-100">
+          {{#each this}}
+            <div class="card shadow-sm border-0 flex-fill">
+              <div class="card-body d-flex">
+                <img src="{{icon}}" alt="{{shortForecast}}" class="me-3" style="width: 60px; height: 60px;">
+                <div>
+                  <h5 class="card-title mb-1">{{name}}</h5>
+                  <p class="mb-1"><strong>{{temperature}}°{{temperatureUnit}}</strong> • {{shortForecast}}</p>
+                  <p class="mb-0 text-muted">
+                    <small>Wind: {{windSpeed}} {{windDirection}}</small><br>
+                    <small>Precip: {{probabilityOfPrecipitation}}%</small>
+                  </p>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+    </div>
+    <div class="w-100 py-4 text-center" style="background-color: #84a5c7; color: white;">
         <h1 class="m-0">Reviews</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+          Write a Review
+        </button>
+    </div>
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form class="modal-content bg-white text-dark" action="/mountain/{{mountain_id}}" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reviewModalLabel">Write Your Review</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="review" class="form-label">Your Review</label>
+              <textarea class="form-control" id="review" name="review" rows="3" required></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label for="rating" class="form-label">Rating (1-5)</label>
+              <input type="number" class="form-control" id="rating" name="rating" min="0.5" max="5" step="0.5" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="image_cap" class="form-label">Image Caption</label>
+              <input type="text" class="form-control" id="image_cap" name="image_cap">
+            </div>
+
+            <div class="mb-3">
+              <label for="file" class="form-label">Upload an Image</label>
+              <input type="file" class="form-control" id="file" name="file" accept="image/*">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Submit Review</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
     </div>
     <div class="container mt-4">
         <div class="card" style="max-height: 600px; overflow-y: auto;">
@@ -91,7 +195,7 @@
                 <div class="mb-2">
                     <h6 class="mb-0">{{username}}</h6>
                     <small class="text-muted">{{date_posted}}</small>
-                    <div id="review-{{review_id}}"></div>
+                    <div id="review-{{review_id}}" style="padding: 10px 5px;"></div>
                     <script>
                     var reviewId = "review-{{review_id}}";
                     var rating = {{rating}};
@@ -116,10 +220,11 @@
             {{/each}}
             </div>
         </div>
+    </div>  
+    
+    <div class="container my-4 d-flex justify-content-center">
+        <div class="p-4 border rounded" id="map" style="height: 500px; width: 80%;"></div>
     </div>
-   <div class="container my-4 d-flex justify-content-center">
-  <div class="p-4 border rounded" id="map" style="height: 500px; width: 80%;"></div>
-</div>
      
   </div>
 </div>
