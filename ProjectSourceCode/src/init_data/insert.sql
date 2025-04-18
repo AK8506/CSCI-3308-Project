@@ -30,7 +30,6 @@ INSERT INTO mountains
     ),
     (
         'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000, 'COZ010'
-
     );
 
 INSERT INTO images
