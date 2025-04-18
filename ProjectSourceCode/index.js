@@ -388,7 +388,7 @@ async function getWeatherData(nws_zone) {
   }
 }
 
-cron.schedule('15 5 * * 5', async () => {
+cron.schedule('15 5 * * 17', async () => {
   console.log('updating nws location data');
   var lat;
   var long;
