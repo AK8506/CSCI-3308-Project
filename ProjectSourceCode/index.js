@@ -11,6 +11,8 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios'); 
 const fs = require('fs');
 const multer = require('multer');
+var cron = require('node-cron');
+
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
@@ -91,6 +93,7 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
+
 // Register hbs as view engine
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -102,6 +105,12 @@ app.use(
     extended: true,
   })
 );
+
+cron.schedule('30 17 * * 5', () => {
+  update_nws_points()
+});
+
+update_nws_points();
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 function mmToInches(mm) {
@@ -403,71 +412,46 @@ async function getWeatherData(nws_zone) {
   }
 }
 
+async function update_nws_points() {
+  console.log('updating nws location data');
+  var lat;
+  var long;
+  var mountain_id;
+  var zone;
+  var forecast_office;
+  var grid_x ;
+  var grid_y;
+  var insert_query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
+  var values;
 
-app.post('/update_nws_point', (req, res) => {
-  // This function updates the NWS zone stored in the database for the mountain given in the parameters
-  var mountain_name = req.body.mountain_name;
+  // Get all montains currently in db
+  var select_query = `select latitude, longitude, mountain_id from mountains`
+  var mountain_data = await db.any(select_query);
 
-  // First get latitude and longitude from database
-  var query = `select latitude, longitude, mountain_id from mountains where mountain_name = $1`
-  var values = [mountain_name];
+  for (let i=0; i<mountain_data.length; i++){
+    // Get data for ith mountain
+    lat = mountain_data[i].latitude;
+    long = mountain_data[i].longitude;
+    mountain_id = mountain_data[i].mountain_id;
 
-  db.one(query, values)
-    .then(data => {
-      var lat = data.latitude;
-      var long = data.longitude;
-      var mountain_id = data.mountain_id;
-
-      
-      // Now call National Weather Service API to get zone, forecast office, and grid points
-      axios({
-        url: 'https://api.weather.gov/points/' + lat + ',' + long,
-        method: 'GET'
-      }).then(results => {
-        var zone = results.data.properties.forecastZone;
-        var forecast_office = results.data.properties.gridId;
-        var grid_x = results.data.properties.gridX;
-        var grid_y = results.data.properties.gridY;
-
-        zone = zone.split('forecast/')[1];
-
-         // Finally update in our db
-        var query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
-        var values = [zone, forecast_office, grid_x, grid_y, mountain_id];
-
-        db.one(query, values)
-          .then(data => {
-            res.status(200).json({
-              data: data,
-            });
-
-          })
-          .catch(err => {
-            res.status(400).json({
-              message: 'Error updating zone in mountains table',
-              error: err,
-            });
-          });
-
-      })
-        .catch(err => {
-          res.status(400).json({
-            message: 'Error getting zone from NWS',
-            error: err,
-          });
-        });
-
-    })
-    .catch(err => {
-      res.status(400).json({
-        message: 'Error getting lat/long from db',
-        error: err,
-      });
+    // Get new nws point based on lat/long
+    var results = await axios({
+      url: 'https://api.weather.gov/points/' + lat + ',' + long,
+      method: 'GET'
     });
 
-});
+    forecast_office = results.data.properties.gridId;
+    grid_x = results.data.properties.gridX;
+    grid_y = results.data.properties.gridY;
+    zone = results.data.properties.forecastZone;
+    zone = zone.split('forecast/')[1];
 
+    values = [zone, forecast_office, grid_x, grid_y, mountain_id];
 
+    var inserted = await db.one(insert_query, values);
+    console.log(inserted);
+  }
+}
 
 app.get('/welcome', (req, res) => {
   res.json({ status: 'success', message: 'Welcome!' });
@@ -643,6 +627,7 @@ WHERE mountains_to_passes.mountain_id = $1;`
           nws_zone : mountain.nws_zone,
           passes: passString,
           currentObservations: weather_observations,
+          periods: forecast,
           message: messageIN,
           mountain_image: mountain.mountain_image
         });
