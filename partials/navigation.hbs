@@ -1,0 +1,18 @@
+<div class="navbar">
+  <div class="navbar-left">
+    <a href="/" class="btn btn-light brand-btn">🏔 POWDER JUNKIE</a>
+  </div>
+
+  <div class="navbar-right">
+    {{#if loggedIn}}
+      <span>Hello, {{username}}!</span>
+      <a href="/profile">Account Settings</a>
+      <form action="/logout" method="POST" style="display:inline;">
+        <button type="submit" class="btn btn-light">Logout</button>
+      </form>
+    {{else}}
+      <a href="/login" class="btn btn-outline-light me-2">Login</a>
+      <a href="/register" class="btn btn-light">Register</a>
+    {{/if}}
+  </div>
+</div>

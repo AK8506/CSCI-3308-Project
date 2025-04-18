@@ -1,0 +1,14 @@
+<div class="dashboard-wrapper">
+  <h1 class="dashboard-welcome">Welcome, {{username}}!</h1>
+
+  <div class="dashboard-search">
+    <input type="text" placeholder="Look up mountains, locations, etc..." />
+    <button type="submit">🔍</button>
+  </div>
+
+  <div class="card-container">
+    {{#each mountains}}
+      {{> mountain-card this }}
+    {{/each}}
+  </div>
+</div>
