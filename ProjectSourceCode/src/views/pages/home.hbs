@@ -1,12 +1,10 @@
-<div style="text-align: center; color: white; margin-top: 150px;">
+<div class="home-wrapper">
   {{#if loggedIn}}
-    <h2>Hello, {{username}}!</h2>
+    <h2 class="home-greeting">Hello, {{username}}!</h2>
   {{else}}
-    {{#if loggedOut}}
-      <h2>You’ve been logged out.</h2>
-    {{/if}}
+    <h2 class="home-greeting">Welcome to Powder Junkie!</h2>
   {{/if}}
-  
-  <h1>Welcome to the Home Page</h1>
-  <p>&copy; 2025 Mountain-Explorer</p>
+
+  <h1 class="home-title">Welcome to the Home Page</h1>
+  <p class="home-subtext">&copy; 2025 Mountain-Explorer</p>
 </div>
