@@ -92,6 +92,7 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
+
 // Register hbs as view engine
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -103,6 +104,12 @@ app.use(
     extended: true,
   })
 );
+
+cron.schedule('30 17 * * 5', () => {
+  update_nws_points()
+});
+
+update_nws_points();
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 function mmToInches(mm) {
@@ -388,7 +395,7 @@ async function getWeatherData(nws_zone) {
   }
 }
 
-cron.schedule('15 5 * * 17', async () => {
+async function update_nws_points() {
   console.log('updating nws location data');
   var lat;
   var long;
@@ -427,7 +434,7 @@ cron.schedule('15 5 * * 17', async () => {
     var inserted = await db.one(insert_query, values);
     console.log(inserted);
   }
-});
+}
 
 app.get('/welcome', (req, res) => {
   res.json({ status: 'success', message: 'Welcome!' });
@@ -551,6 +558,10 @@ WHERE mountains_to_passes.mountain_id = $1;`
         const weather_response = await getWeatherData(mountain.nws_zone);
         const weather_observations = weather_response.data; 
 
+        const forecast_response = await get_forecast(mountain.mountain_name);
+        const forecast = forecast_response.data;
+        console.log(forecast);
+
         if (weather_observations && weather_observations.humidity != null) {
           weather_observations.humidity = Math.round(weather_observations.humidity);
         }
@@ -584,7 +595,8 @@ WHERE mountains_to_passes.mountain_id = $1;`
           apiKey : process.env.GOOGLE_MAPS_API_KEY,
           nws_zone : mountain.nws_zone,
           passes: passString,
-          currentObservations: weather_observations
+          currentObservations: weather_observations,
+          periods: forecast
         });
         
       } else {
