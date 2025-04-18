@@ -35,7 +35,8 @@ CREATE TABLE mountains (
   nws_zone VARCHAR(10),
   forecast_office VARCHAR(3),
   grid_x INTEGER,
-  grid_y INTEGER
+  grid_y INTEGER,
+  mountain_image VARCHAR(200)
 );
 
 DROP TABLE IF EXISTS weather;

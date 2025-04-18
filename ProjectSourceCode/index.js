@@ -46,6 +46,14 @@ cb(null, true);
  }
 };
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: true,
+    resave: true,
+  })
+);
+
 const upload = multer({
 storage: storage,
 limits: {
@@ -72,13 +80,6 @@ const dbConfig = {
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    saveUninitialized: true,
-    resave: true,
-  })
-);
 
 const db = pgp(dbConfig);
 
@@ -122,11 +123,27 @@ function kmhToMph(kmh) {
   return Math.round(kmh * 0.621371 * 10) / 10;
 }
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  mountainsReal = await get_HomePage_Mountains();
+  
   res.render('pages/home', {
+    mountains:mountainsReal,
     user: req.session.user,
   });
 });
+
+async function get_HomePage_Mountains() {
+  const query = `SELECT * FROM mountains LIMIT 20`;
+
+  try {
+    const data = await db.any(query);
+    return data; 
+  } catch (err) {
+    console.error("Error getting mountains:", err);
+    return err; 
+  }
+}
+
 
 app.get('/reviews', (req, res) => {
   const mountain_name = req.query.mountain_name;
@@ -536,6 +553,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/mountain/:id', async (req, res) => {
+  const messageIN = req.query.message;
   const mountainId = req.params.id;
   const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
   const passesQuery = `SELECT passes.pass_name FROM passes
@@ -546,7 +564,8 @@ WHERE mountains_to_passes.mountain_id = $1;`
   JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
   LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
   LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
-  WHERE mountains.mountain_id = $1`;
+  WHERE mountains.mountain_id = $1
+  ORDER BY reviews.date_posted DESC;`;
   
   db.oneOrNone(query, [mountainId])
     .then(async (mountain) => {
@@ -556,16 +575,28 @@ WHERE mountains_to_passes.mountain_id = $1;`
           db.any(reviewQuery, [mountainId])
         ]);
         const weather_response = await getWeatherData(mountain.nws_zone);
-        const weather_observations = weather_response.data; 
-
-        const forecast_response = await get_forecast(mountain.mountain_name);
-        const forecast = forecast_response.data;
-        console.log(forecast);
-
-        if (weather_observations && weather_observations.humidity != null) {
+        const weather_observations = weather_response.data != null ? weather_response.data : {
+          humidity:null,
+          barometricPressure : null,
+          temperature:null,
+          humidity:null,
+          max_temp_last_24_hours: null,
+          min_temp_last_24_hours: null,
+          precipitation_last_hour: null,
+          precipitation_last_3_hours: null,
+          precipitation_last_6_hours: null,
+          wind_speed: null,
+          wind_gust: null,
+          wind_direction: null
+        };
+        
+        if (weather_observations.humidity != null) {
           weather_observations.humidity = Math.round(weather_observations.humidity);
         }
         const fieldsToCheck = [
+          'humidity',
+          'pressure',
+          'temperature',
           'max_temp_last_24_hours',
           'min_temp_last_24_hours',
           'precipitation_last_hour',
@@ -596,7 +627,9 @@ WHERE mountains_to_passes.mountain_id = $1;`
           nws_zone : mountain.nws_zone,
           passes: passString,
           currentObservations: weather_observations,
-          periods: forecast
+          periods: forecast,
+          message: messageIN,
+          mountain_image: mountain.mountain_image
         });
         
       } else {
@@ -643,7 +676,7 @@ app.get('/profile', (req, res) => {
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
   req.session.destroy(function (err) {
-    res.render('pages/home' , {user: null});
+    res.redirect('/' , {user: null});
   });
 });
 
@@ -673,7 +706,6 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
     RETURNING image_id
   `;
   const filePath = req.file ? `/${req.file.path}` : null;
-  console.log(filePath);
   const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
   db.one(insertReviewQuery, [username, review, date_posted, rating])
@@ -697,12 +729,12 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
       return db.none(linkReviewQuery, [mountainId, reviewId]);
     })
     .then(() => {
-      console.log('Review posted and linked to mountain successfully');
-      res.render('pages/mountain', { user: req.session.user, message: 'Review posted successfully' });
+      res.redirect(`/mountain/${mountainId}?message=Review+posted+successfully`);
     })
     .catch((err) => {
       console.log(err);
-      res.render('pages/mountain', { user: req.session.user, message: 'Error posting review' });
+      res.redirect(`/mountain/${mountainId}?message=Error+posting+review`);
+  
     });
 });
 
