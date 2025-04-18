@@ -23,43 +23,43 @@ INSERT INTO reviews
     );
 
 INSERT INTO mountains
-    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation, nws_zone)
+    (mountain_name, location_name, latitude, longitude, avg_rating, peak_elevation)
     VALUES
     (
-        'TestMT', 'Testing City', 45, -116, 3.5, 12000, 'COZ010'
+        'TestMT', 'Testing City', 45, -116, 3.5, 12000
     ),
     (
-        'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000, 'COZ010'
+        'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000
     ),
     (
-        'Aspen Mountain', 'Aspen', 39.1875, -106.8167, NULL, 11212
+        'Aspen Mountain', 'Aspen', 39.1875, -106.8167, 0, 11212
     ),
     (
-        'Breckenridge', 'Breckenridge', 39.4817, -106.0384, NULL, 12998
+        'Breckenridge', 'Breckenridge', 39.4817, -106.0384, 0, 12998
     ),
     (
-        'Vail', 'Vail', 39.6403, -106.3742, NULL, 11570
+        'Vail', 'Vail', 39.6403, -106.3742, 0, 11570
     ),
     (
-        'Keystone', 'Keystone', 39.5792, -105.9347, NULL, 12408
+        'Keystone', 'Keystone', 39.5792, -105.9347, 0, 12408
     ),
     (
-        'Copper Mountain', 'Copper Mountain', 39.5022, -106.1511, NULL, 12313
+        'Copper Mountain', 'Copper Mountain', 39.5022, -106.1511, 0, 12313
     ),
     (
-        'Steamboat', 'Steamboat Springs', 40.4850, -106.8317, NULL, 10568
+        'Steamboat', 'Steamboat Springs', 40.4850, -106.8317, 0, 10568
     ),
     (
-        'Telluride', 'Telluride', 37.9375, -107.8123, NULL, 13150
+        'Telluride', 'Telluride', 37.9375, -107.8123, 0, 13150
     ),
     (
-        'Winter Park', 'Winter Park', 39.8917, -105.7631, NULL, 12060
+        'Winter Park', 'Winter Park', 39.8917, -105.7631, 0, 12060
     ),
     (
-        'Crested Butte', 'Crested Butte', 38.8990, -106.9659, NULL, 12162
+        'Crested Butte', 'Crested Butte', 38.8990, -106.9659, 0, 12162
     ),
     (
-        'Arapahoe Basin', 'Dillon', 39.6425, -105.8719, NULL, 13050
+        'Arapahoe Basin', 'Dillon', 39.6425, -105.8719, 0, 13050
     );
 
 INSERT INTO images

@@ -73,8 +73,8 @@ const dbConfig = {
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
-    saveUninitialized: false,
-    resave: false,
+    saveUninitialized: true,
+    resave: true,
   })
 );
 
@@ -114,7 +114,9 @@ function kmhToMph(kmh) {
 }
 
 app.get('/', (req, res) => {
-  res.render('pages/home');
+  res.render('pages/home', {
+    user: req.session.user,
+  });
 });
 
 app.get('/reviews', (req, res) => {
@@ -449,9 +451,6 @@ app.post('/update_nws_point', (req, res) => {
 });
 
 
-app.get('/login', (req, res) => {
-  res.render('pages/login');
-});
 
 app.get('/welcome', (req, res) => {
   res.json({ status: 'success', message: 'Welcome!' });
@@ -460,7 +459,7 @@ app.get('/welcome', (req, res) => {
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
 
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/register', {user: req.session.user});
 });
 
 
@@ -477,7 +476,7 @@ app.post('/register', async (req, res) => {
   const password = req.body.password;
   if (username == null) {
     console.log('null');
-    res.status(400).render('pages/register', { message: 'username cannot be null' });
+    res.status(400).render('pages/register', { user: req.session.user, message: 'username cannot be null' });
   } else {
     // check if username already exists
     const query = 'SELECT * FROM users WHERE username = $1';
@@ -485,7 +484,7 @@ app.post('/register', async (req, res) => {
       .then(async (user) => {
         if (user) {
           // User already exists
-          res.render('pages/register', { message: 'Account already exists.' });
+          res.render('pages/register', { user: req.session.user, message: 'Account already exists.' });
         } else {
           // Hash the password using bcrypt library
           const hash = await bcrypt.hash(password, 10);
@@ -494,14 +493,14 @@ app.post('/register', async (req, res) => {
           const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
           db.none(insertQuery, [username, email, hash])
             .then(() => {
-              res.status(200).render('pages/register', { message: 'Account created.' });
+              res.status(200).render('pages/login', {user: req.session.user, message: 'Account created.' });
             })
             .catch((err) => {
               console.log(err);
               res.status(400).json({
                 error: err
               });
-              res.render('pages/register', { message: 'Error creating account.' });
+              res.render('pages/register', {user: req.session.user, message: 'Error creating account.' });
             });
         }
       })
@@ -511,7 +510,7 @@ app.post('/register', async (req, res) => {
           error: err,
           message: "bottom error"
         });
-        res.render('pages/register', { message: 'Error creating account.' });
+        res.render('pages/register', { user: req.session.user, message: 'Error creating account.' });
       });
   }
 });
@@ -520,7 +519,7 @@ app.post('/register', async (req, res) => {
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
 app.get('/login', (req, res) => {
-  res.render('pages/login');
+  res.render('pages/login' ,{user: req.session.user});
 });
 
 app.post('/login', async (req, res) => {
@@ -536,18 +535,18 @@ app.post('/login', async (req, res) => {
       // password is correct
       if (match) {
         req.session.user = user;
-        res.session.save();
-        res.redirect('/home'); // redirect to home page
+        req.session.save();
+        res.redirect('/'); // redirect to home page
         res.status(200)
       } else {
-        console.log('Password is incorrect');
-        res.render('pages/login', { message: 'Password is incorrect' }); // make a messages.hbs file
+        //console.log('Password is incorrect');
+        res.render('pages/login', { user: req.session.user, message: 'Password is incorrect' }); 
       }
       message: "Successfully logged in";
     })
     .catch((err) => {
-      console.log('User not found:', err);
-      res.render('pages/login', { message: 'User not found' });
+      //console.log('User not found:', err);
+      res.render('pages/login', { user: req.session.user, message: 'User not found' });
       message: err.message;
     });
 });
@@ -651,13 +650,11 @@ app.get('/profile', (req, res) => {
   }
 });
 
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-});
+
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
   req.session.destroy(function (err) {
-    res.render('pages/home');
+    res.render('pages/home' , {user: null});
   });
 });
 
@@ -712,11 +709,11 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
     })
     .then(() => {
       console.log('Review posted and linked to mountain successfully');
-      res.render('pages/mountain', { message: 'Review posted successfully' });
+      res.render('pages/mountain', { user: req.session.user, message: 'Review posted successfully' });
     })
     .catch((err) => {
       console.log(err);
-      res.render('pages/mountain', { message: 'Error posting review' });
+      res.render('pages/mountain', { user: req.session.user, message: 'Error posting review' });
     });
 });
 
