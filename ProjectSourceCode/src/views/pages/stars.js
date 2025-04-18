@@ -30,7 +30,6 @@ function setStarRating_large(rating, star_Container) {
 }
 
 function setStarRating_med(rating, star_Container) {
-    console.log("here");
     const starContainer = document.getElementById(star_Container);
     starContainer.innerHTML = '';
     for (let i = 0; i < Math.floor(rating); i++) {
