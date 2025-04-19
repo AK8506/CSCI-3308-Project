@@ -11,6 +11,8 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios'); 
 const fs = require('fs');
 const multer = require('multer');
+var cron = require('node-cron');
+
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
@@ -44,6 +46,14 @@ cb(null, true);
  }
 };
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: true,
+    resave: true,
+  })
+);
+
 const upload = multer({
 storage: storage,
 limits: {
@@ -70,13 +80,6 @@ const dbConfig = {
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    saveUninitialized: false,
-    resave: false,
-  })
-);
 
 const db = pgp(dbConfig);
 
@@ -90,6 +93,7 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
+
 // Register hbs as view engine
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -101,6 +105,12 @@ app.use(
     extended: true,
   })
 );
+
+cron.schedule('30 17 * * 5', () => {
+  update_nws_points()
+});
+
+update_nws_points();
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 function mmToInches(mm) {
@@ -113,9 +123,27 @@ function kmhToMph(kmh) {
   return Math.round(kmh * 0.621371 * 10) / 10;
 }
 
-app.get('/', (req, res) => {
-  res.render('pages/home');
+app.get('/', async (req, res) => {
+  mountainsReal = await get_HomePage_Mountains();
+  
+  res.render('pages/home', {
+    mountains:mountainsReal,
+    user: req.session.user,
+  });
 });
+
+async function get_HomePage_Mountains() {
+  const query = `SELECT * FROM mountains LIMIT 20`;
+
+  try {
+    const data = await db.any(query);
+    return data; 
+  } catch (err) {
+    console.error("Error getting mountains:", err);
+    return err; 
+  }
+}
+
 
 app.get('/reviews', (req, res) => {
   const mountain_name = req.query.mountain_name;
@@ -384,74 +412,46 @@ async function getWeatherData(nws_zone) {
   }
 }
 
+async function update_nws_points() {
+  console.log('updating nws location data');
+  var lat;
+  var long;
+  var mountain_id;
+  var zone;
+  var forecast_office;
+  var grid_x ;
+  var grid_y;
+  var insert_query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
+  var values;
 
-app.post('/update_nws_point', (req, res) => {
-  // This function updates the NWS zone stored in the database for the mountain given in the parameters
-  var mountain_name = req.body.mountain_name;
+  // Get all montains currently in db
+  var select_query = `select latitude, longitude, mountain_id from mountains`
+  var mountain_data = await db.any(select_query);
 
-  // First get latitude and longitude from database
-  var query = `select latitude, longitude, mountain_id from mountains where mountain_name = $1`
-  var values = [mountain_name];
+  for (let i=0; i<mountain_data.length; i++){
+    // Get data for ith mountain
+    lat = mountain_data[i].latitude;
+    long = mountain_data[i].longitude;
+    mountain_id = mountain_data[i].mountain_id;
 
-  db.one(query, values)
-    .then(data => {
-      var lat = data.latitude;
-      var long = data.longitude;
-      var mountain_id = data.mountain_id;
-
-      
-      // Now call National Weather Service API to get zone, forecast office, and grid points
-      axios({
-        url: 'https://api.weather.gov/points/' + lat + ',' + long,
-        method: 'GET'
-      }).then(results => {
-        var zone = results.data.properties.forecastZone;
-        var forecast_office = results.data.properties.gridId;
-        var grid_x = results.data.properties.gridX;
-        var grid_y = results.data.properties.gridY;
-
-        zone = zone.split('forecast/')[1];
-
-         // Finally update in our db
-        var query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
-        var values = [zone, forecast_office, grid_x, grid_y, mountain_id];
-
-        db.one(query, values)
-          .then(data => {
-            res.status(200).json({
-              data: data,
-            });
-
-          })
-          .catch(err => {
-            res.status(400).json({
-              message: 'Error updating zone in mountains table',
-              error: err,
-            });
-          });
-
-      })
-        .catch(err => {
-          res.status(400).json({
-            message: 'Error getting zone from NWS',
-            error: err,
-          });
-        });
-
-    })
-    .catch(err => {
-      res.status(400).json({
-        message: 'Error getting lat/long from db',
-        error: err,
-      });
+    // Get new nws point based on lat/long
+    var results = await axios({
+      url: 'https://api.weather.gov/points/' + lat + ',' + long,
+      method: 'GET'
     });
 
-});
+    forecast_office = results.data.properties.gridId;
+    grid_x = results.data.properties.gridX;
+    grid_y = results.data.properties.gridY;
+    zone = results.data.properties.forecastZone;
+    zone = zone.split('forecast/')[1];
 
+    values = [zone, forecast_office, grid_x, grid_y, mountain_id];
 
-app.get('/login', (req, res) => {
-  res.render('pages/login');
-});
+    var inserted = await db.one(insert_query, values);
+    console.log(inserted);
+  }
+}
 
 app.get('/welcome', (req, res) => {
   res.json({ status: 'success', message: 'Welcome!' });
@@ -460,7 +460,7 @@ app.get('/welcome', (req, res) => {
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
 
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/register', {user: req.session.user});
 });
 
 
@@ -477,7 +477,7 @@ app.post('/register', async (req, res) => {
   const password = req.body.password;
   if (username == null) {
     console.log('null');
-    res.status(400).render('pages/register', { message: 'username cannot be null' });
+    res.status(400).render('pages/register', { user: req.session.user, message: 'username cannot be null' });
   } else {
     // check if username already exists
     const query = 'SELECT * FROM users WHERE username = $1';
@@ -485,7 +485,7 @@ app.post('/register', async (req, res) => {
       .then(async (user) => {
         if (user) {
           // User already exists
-          res.render('pages/register', { message: 'Account already exists.' });
+          res.render('pages/register', { user: req.session.user, message: 'Account already exists.' });
         } else {
           // Hash the password using bcrypt library
           const hash = await bcrypt.hash(password, 10);
@@ -494,14 +494,14 @@ app.post('/register', async (req, res) => {
           const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
           db.none(insertQuery, [username, email, hash])
             .then(() => {
-              res.status(200).render('pages/register', { message: 'Account created.' });
+              res.status(200).render('pages/login', {user: req.session.user, message: 'Account created.' });
             })
             .catch((err) => {
               console.log(err);
               res.status(400).json({
                 error: err
               });
-              res.render('pages/register', { message: 'Error creating account.' });
+              res.render('pages/register', {user: req.session.user, message: 'Error creating account.' });
             });
         }
       })
@@ -511,7 +511,7 @@ app.post('/register', async (req, res) => {
           error: err,
           message: "bottom error"
         });
-        res.render('pages/register', { message: 'Error creating account.' });
+        res.render('pages/register', { user: req.session.user, message: 'Error creating account.' });
       });
   }
 });
@@ -520,7 +520,7 @@ app.post('/register', async (req, res) => {
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
 app.get('/login', (req, res) => {
-  res.render('pages/login');
+  res.render('pages/login' ,{user: req.session.user});
 });
 
 app.post('/login', async (req, res) => {
@@ -536,23 +536,24 @@ app.post('/login', async (req, res) => {
       // password is correct
       if (match) {
         req.session.user = user;
-        res.session.save();
-        res.redirect('/home'); // redirect to home page
+        req.session.save();
+        res.redirect('/'); // redirect to home page
         res.status(200)
       } else {
-        console.log('Password is incorrect');
-        res.render('pages/login', { message: 'Password is incorrect' }); // make a messages.hbs file
+        //console.log('Password is incorrect');
+        res.render('pages/login', { user: req.session.user, message: 'Password is incorrect' }); 
       }
       message: "Successfully logged in";
     })
     .catch((err) => {
-      console.log('User not found:', err);
-      res.render('pages/login', { message: 'User not found' });
+      //console.log('User not found:', err);
+      res.render('pages/login', { user: req.session.user, message: 'User not found' });
       message: err.message;
     });
 });
 
 app.get('/mountain/:id', async (req, res) => {
+  const messageIN = req.query.message;
   const mountainId = req.params.id;
   const query = 'SELECT * FROM mountains WHERE mountain_id = $1';
   const passesQuery = `SELECT passes.pass_name FROM passes
@@ -563,7 +564,8 @@ WHERE mountains_to_passes.mountain_id = $1;`
   JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
   LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
   LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
-  WHERE mountains.mountain_id = $1`;
+  WHERE mountains.mountain_id = $1
+  ORDER BY reviews.date_posted DESC;`;
   
   db.oneOrNone(query, [mountainId])
     .then(async (mountain) => {
@@ -573,12 +575,28 @@ WHERE mountains_to_passes.mountain_id = $1;`
           db.any(reviewQuery, [mountainId])
         ]);
         const weather_response = await getWeatherData(mountain.nws_zone);
-        const weather_observations = weather_response.data; 
-
-        if (weather_observations && weather_observations.humidity != null) {
+        const weather_observations = weather_response.data != null ? weather_response.data : {
+          humidity:null,
+          barometricPressure : null,
+          temperature:null,
+          humidity:null,
+          max_temp_last_24_hours: null,
+          min_temp_last_24_hours: null,
+          precipitation_last_hour: null,
+          precipitation_last_3_hours: null,
+          precipitation_last_6_hours: null,
+          wind_speed: null,
+          wind_gust: null,
+          wind_direction: null
+        };
+        
+        if (weather_observations.humidity != null) {
           weather_observations.humidity = Math.round(weather_observations.humidity);
         }
         const fieldsToCheck = [
+          'humidity',
+          'pressure',
+          'temperature',
           'max_temp_last_24_hours',
           'min_temp_last_24_hours',
           'precipitation_last_hour',
@@ -608,7 +626,10 @@ WHERE mountains_to_passes.mountain_id = $1;`
           apiKey : process.env.GOOGLE_MAPS_API_KEY,
           nws_zone : mountain.nws_zone,
           passes: passString,
-          currentObservations: weather_observations
+          currentObservations: weather_observations,
+          periods: forecast,
+          message: messageIN,
+          mountain_image: mountain.mountain_image
         });
         
       } else {
@@ -651,13 +672,11 @@ app.get('/profile', (req, res) => {
   }
 });
 
-app.get('/logout', (req, res) => {
-  req.session.destroy();
-});
+
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
   req.session.destroy(function (err) {
-    res.render('pages/home');
+    res.redirect('/' , {user: null});
   });
 });
 
@@ -687,7 +706,6 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
     RETURNING image_id
   `;
   const filePath = req.file ? `/${req.file.path}` : null;
-  console.log(filePath);
   const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
   db.one(insertReviewQuery, [username, review, date_posted, rating])
@@ -711,12 +729,12 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
       return db.none(linkReviewQuery, [mountainId, reviewId]);
     })
     .then(() => {
-      console.log('Review posted and linked to mountain successfully');
-      res.render('pages/mountain', { message: 'Review posted successfully' });
+      res.redirect(`/mountain/${mountainId}?message=Review+posted+successfully`);
     })
     .catch((err) => {
       console.log(err);
-      res.render('pages/mountain', { message: 'Error posting review' });
+      res.redirect(`/mountain/${mountainId}?message=Error+posting+review`);
+  
     });
 });
 

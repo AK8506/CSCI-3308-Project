@@ -4,24 +4,23 @@
       <a class="navbar-brand" href="/"></a>
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          {{#if user_is_logged_in}}
-            <a class="nav-link" href="/home">Home</a>
-          {{else}}
-            <a class="nav-link" href="/login">Home</a>
-          {{/if}}
+            <a class="nav-link" href="/" style="color: #1E3A8A; font-weight: bold; letter-spacing: 1px;">POWDER JUNKIE</a>
         </li>
-        <li class="nav-item">
-          {{#if user_is_logged_in}}
-            <a class="nav-link" href="/Mountains">Mountains</a>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        
+          {{#if user}}
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a> 
+          </li>
           {{else}}
-            <a class="nav-link" href="/login">Mountains</a>
-          {{/if}}
-        </li>
-        <li class="nav-item">
-          {{#if username}}
-            <a class="nav-link" href="/logout">Logout</a>
-          {{else}}
-            <a class="nav-link" href="/login">Logout</a>
+          <li class="nav-item">
+             <a class="nav-link" href="/register">Register</a>
+          </li>
+          <li class="nav-item">
+             <a class="nav-link" href="/login">Login</a>
+          </li>
+          
           {{/if}}
         </li>
       </ul>
@@ -30,7 +29,7 @@
     <div class="navbar-collapse collapse order-3 dual-collapse2">
       <ul class="navbar-nav ml-auto">
         <li class="nav-item">
-          <a class="nav-link" href="#">{{ username }}</a>
+          <a class="nav-link" href="#">{{ user.username }}</a>
         </li>
       </ul>
     </div>
