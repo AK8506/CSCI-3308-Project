@@ -13,7 +13,9 @@ CREATE TABLE reviews (
   review TEXT,
   date_posted DATE NOT NULL,
   rating DECIMAL NOT NULL,
-  snow_quality DECIMAL NOT NULL
+  snow_quality DECIMAL NOT NULL,
+  difficulty DECIMAL NOT NULL,
+  lift_infrastructure DECIMAL NOT NULL
 );
 
 DROP TABLE IF EXISTS images;
@@ -38,7 +40,9 @@ CREATE TABLE mountains (
   grid_x INTEGER,
   grid_y INTEGER,
   mountain_image VARCHAR(200),
-  avg_snow_quality DECIMAL NOT NULL
+  avg_snow_quality DECIMAL NOT NULL,
+  avg_lift_infrastructure DECIMAL NOT NULL,
+  avg_difficulty DECIMAL NOT NULL
 );
 
 DROP TABLE IF EXISTS weather;

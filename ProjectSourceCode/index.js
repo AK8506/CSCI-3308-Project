@@ -212,6 +212,50 @@ async function getAvg_snow_rating(mountainID) {
   }
 }
 
+async function updateAvg_Review(mountainID) {
+  try {
+    const res = await db.query(`
+      SELECT reviews.rating,
+      reviews.difficulty,
+      reviews.lift_infrastructure
+      FROM reviews
+      JOIN mountains_to_reviews ON reviews.review_id = mountains_to_reviews.review_id
+      WHERE mountains_to_reviews.mountain_id = $1
+    `, [mountainID]);
+    let avgRating = 0;
+    let avgDifficulty = 0;
+    let avgLiftInfrastructure = 0;
+
+    if (res.length === 0) {
+      console.log(`No reviews found for mountain_id ${mountainID}. Setting ratings to 0.`);
+    } else {
+      const ratings = res.map(row => parseFloat(row.rating));
+      const difficulties = res.map(row => parseFloat(row.difficulty));
+      const liftInfrastructures = res.map(row => parseFloat(row.lift_infrastructure));
+
+      avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+      avgDifficulty = difficulties.reduce((sum, d) => sum + d, 0) / difficulties.length;
+      avgLiftInfrastructure = liftInfrastructures.reduce((sum, l) => sum + l, 0) / liftInfrastructures.length;
+    }
+    await db.query(`
+      UPDATE mountains
+      SET avg_rating = $1,
+          avg_difficulty = $2,
+          avg_lift_infrastructure = $3
+      WHERE mountain_id = $4
+    `, [
+      avgRating.toFixed(2),
+      avgDifficulty.toFixed(2),
+      avgLiftInfrastructure.toFixed(2),
+      mountainID
+    ]);
+
+
+  } catch (err) {
+    console.error('Update avg rating failed:', err);
+  }
+}
+
 
 
 async function get_forecast(mountain_name) {
@@ -233,8 +277,8 @@ async function get_forecast(mountain_name) {
     } else {
       var generation_time = new Date(data[0].generation_time);
       var current_time = new Date();
-      console.log(generation_time);
-      console.log(current_time);
+      //console.log(generation_time);
+      //console.log(current_time);
       var diffInMs = Math.abs(current_time.getTime() - generation_time.getTime());
     }
     if (diffInMs > 1000 * 60 * 60) {  // stored data is outdated, update it first
@@ -335,8 +379,8 @@ async function getWeatherData(nws_zone) {
     } else {
       var observation_time = new Date(data.observation_time);
       var current_time = new Date();
-      console.log(observation_time);
-      console.log(current_time);
+      //console.log(observation_time);
+      //console.log(current_time);
       var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
     }
 
@@ -476,7 +520,7 @@ async function update_nws_points() {
     values = [zone, forecast_office, grid_x, grid_y, mountain_id];
 
     var inserted = await db.one(insert_query, values);
-    console.log(inserted);
+    //console.log(inserted);
   }
 }
 
@@ -661,7 +705,9 @@ WHERE mountains_to_passes.mountain_id = $1;`
           periods: periods,
           message: messageIN,
           mountain_image: mountain.mountain_image,
-          mountain_snow_rating : await getAvg_snow_rating(mountain.mountain_id)
+          mountain_snow_rating : await getAvg_snow_rating(mountain.mountain_id),
+          avg_difficulty: mountain.avg_difficulty,
+          avg_lifts_infrastructure : mountain.avg_lift_infrastructure
         });
 
       } else {
@@ -724,12 +770,14 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
   const date_posted = new Date();
   const rating = req.body.rating;
   const snow_rt = req.body.snow_quality;
+  const diff = req.body.difficulty;
+  const lift_infra = req.body.lift_infrastructure;
   image_cap = req.body.image_cap;
 
   // Insert the review into the reviews table
   const insertReviewQuery = `
-    INSERT INTO reviews(username, review, date_posted, rating, snow_quality) 
-    VALUES($1, $2, $3, $4, $5) 
+    INSERT INTO reviews(username, review, date_posted, rating, snow_quality, difficulty, lift_infrastructure) 
+    VALUES($1, $2, $3, $4, $5, $6, $7) 
     RETURNING review_id
   `;
 
@@ -741,17 +789,20 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
   const filePath = req.file ? `/${req.file.path}` : null;
   const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
-  db.one(insertReviewQuery, [username, review, date_posted, rating, snow_rt])
-    .then((result) => {
+  db.one(insertReviewQuery, [username, review, date_posted, rating, snow_rt, diff, lift_infra])
+    .then(async (result) => {
       const reviewId = result.review_id;
 
       //insert into image table
-      db.one(insertImageQuery, [filePath, image_cap])
-        .then((result) => {
-          const imageID = result.image_id;
-          //link review id to image id
-          db.none(insertImageToReview, [reviewId, imageID]);
-        })
+      if(filePath != null){
+        //insert into image table
+        db.one(insertImageQuery, [filePath, image_cap])
+          .then((result) => {
+            const imageID = result.image_id;
+            //link review id to image id
+            db.none(insertImageToReview, [reviewId, imageID]);
+          })
+      }
 
       // Link the review to the mountain in the mountains_to_reviews table
       const linkReviewQuery = `
@@ -759,7 +810,8 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
         VALUES($1, $2)
       `;
 
-      return db.none(linkReviewQuery, [mountainId, reviewId]);
+      db.none(linkReviewQuery, [mountainId, reviewId]);
+      await updateAvg_Review(mountainId);
     })
     .then(() => {
       res.redirect(`/mountain/${mountainId}?message=Review+posted+successfully`);
