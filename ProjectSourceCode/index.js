@@ -106,10 +106,6 @@ app.use(
   })
 );
 
-cron.schedule('30 17 * * 5', () => {
-  update_nws_points()
-});
-
 update_nws_points();
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
@@ -740,7 +736,11 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 if (require.main === module) {
-  app.listen(3000, () => console.log('Server running'));
+  app.listen(3000, () => {console.log('Server running');
+    cron.schedule('15 4 * * 1', async () => {
+      update_nws_points();
+     });
+  });
 }
 module.exports = { app, db };
 
