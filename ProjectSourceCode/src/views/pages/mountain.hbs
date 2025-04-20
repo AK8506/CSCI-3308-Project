@@ -124,21 +124,21 @@
     {{#each periods}}
       <div class="col-12 col-md-4 mb-4">
         <div class="d-flex flex-column gap-3 h-100">
-          {{#each this}}
+          {{!-- {{#each this}} --}}
             <div class="card shadow-sm border-0 flex-fill">
               <div class="card-body d-flex">
-                <img src="{{icon}}" alt="{{shortForecast}}" class="me-3" style="width: 60px; height: 60px;">
+                <img src="{{this.icon}}" alt="{{this.shortforecast}}" class="me-3" style="width: 60px; height: 60px;">
                 <div>
-                  <h5 class="card-title mb-1">{{name}}</h5>
-                  <p class="mb-1"><strong>{{temperature}}°{{temperatureUnit}}</strong> • {{shortForecast}}</p>
+                  <h5 class="card-title mb-1">{{this.period_name}}</h5>
+                  <p class="mb-1"><strong>{{this.temperature}}°{{this.temperatureunit}}</strong> • {{this.shortforecast}}</p>
                   <p class="mb-0 text-muted">
-                    <small>Wind: {{windSpeed}} {{windDirection}}</small><br>
-                    <small>Precip: {{probabilityOfPrecipitation}}%</small>
+                    <small>Wind: {{this.windspeed}} {{this.winddirection}}</small><br>
+                    <small>Precip: {{this.probabilityofprecipitation}}%</small>
                   </p>
                 </div>
               </div>
             </div>
-          {{/each}}
+          {{!-- {{/each}} --}}
         </div>
       </div>
     {{/each}}

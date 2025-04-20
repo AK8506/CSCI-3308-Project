@@ -570,6 +570,10 @@ WHERE mountains_to_passes.mountain_id = $1;`
           db.any(passesQuery, [mountainId]),
           db.any(reviewQuery, [mountainId])
         ]);
+        const forecast = await get_forecast(mountain.mountain_name);
+        const periods = forecast.data;
+        console.log(periods);
+
         const weather_response = await getWeatherData(mountain.nws_zone);
         const weather_observations = weather_response.data != null ? weather_response.data : {
           humidity: null,
@@ -623,7 +627,7 @@ WHERE mountains_to_passes.mountain_id = $1;`
           nws_zone: mountain.nws_zone,
           passes: passString,
           currentObservations: weather_observations,
-          periods: forecast,
+          periods: periods,
           message: messageIN,
           mountain_image: mountain.mountain_image
         });
