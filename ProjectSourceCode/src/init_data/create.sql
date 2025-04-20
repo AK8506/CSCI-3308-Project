@@ -71,7 +71,7 @@ CREATE TABLE forecasts (
   windSpeed VARCHAR(20),
   windDirection VARCHAR(3),
   icon VARCHAR(100),
-  shortForecast VARCHAR(60),
+  shortForecast VARCHAR(100),
   probabilityOfPrecipitation INTEGER,
   PRIMARY KEY(forecast_office, grid_x, grid_y, generation_time, period_number)
 );
