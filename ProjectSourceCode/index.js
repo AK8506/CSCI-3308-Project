@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
-const axios = require('axios'); 
+const axios = require('axios');
 const fs = require('fs');
 const multer = require('multer');
 var cron = require('node-cron');
@@ -17,8 +17,8 @@ var cron = require('node-cron');
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
-	fs.mkdirSync(uploadDir, { recursive: true });
-	console.log('Created uploads directory');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory');
 }
 
 // This allows serving static files from the uploads directory
@@ -26,24 +26,24 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-  cb(null, 'uploads/'); // Destination folder
-},
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Destination folder
+  },
 
-filename: function(req, file, cb) {
-// Create unique filename with original extension
- cb(null, Date.now() + '-' + file.originalname);
-}
+  filename: function (req, file, cb) {
+    // Create unique filename with original extension
+    cb(null, Date.now() + '-' + file.originalname);
+  }
 });
 
 // Set up file filter if you want to restrict file types
 
 const fileFilter = (req, file, cb) => {
-if (file.mimetype.startsWith('image/')) {
-cb(null, true);
-} else {
-  cb(new Error('Not an image! Please upload only images.'), false);
- }
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Not an image! Please upload only images.'), false);
+  }
 };
 
 app.use(
@@ -55,11 +55,11 @@ app.use(
 );
 
 const upload = multer({
-storage: storage,
-limits: {
-   fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
- },
- fileFilter: fileFilter
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
+  },
+  fileFilter: fileFilter
 });
 
 
@@ -74,7 +74,7 @@ const hbs = handlebars.create({
 // database configuration
 const dbConfig = {
   host: process.env.HOST, // the database server
-  port: process.env.PORT, // the database port
+  port: process.env.PGPORT, // the database port
   database: process.env.POSTGRES_DB, // the database name
   user: process.env.POSTGRES_USER, // the user account to connect with
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
@@ -114,10 +114,10 @@ update_nws_points();
 // -------------------------------------  ROUTES for home.hbs   ---------------------------------------
 
 function mmToInches(mm) {
-  return Math.round(mm / 25.4 * 10) /10;
+  return Math.round(mm / 25.4 * 10) / 10;
 }
 function cToF(celsius) {
-  return (Math.round(celsius * 9/5 * 10)/10 + 32);
+  return (Math.round(celsius * 9 / 5 * 10) / 10 + 32);
 }
 function kmhToMph(kmh) {
   return Math.round(kmh * 0.621371 * 10) / 10;
@@ -125,9 +125,9 @@ function kmhToMph(kmh) {
 
 app.get('/', async (req, res) => {
   mountainsReal = await get_HomePage_Mountains();
-  
+
   res.render('pages/home', {
-    mountains:mountainsReal,
+    mountains: mountainsReal,
     user: req.session.user,
   });
 });
@@ -137,10 +137,10 @@ async function get_HomePage_Mountains() {
 
   try {
     const data = await db.any(query);
-    return data; 
+    return data;
   } catch (err) {
     console.error("Error getting mountains:", err);
-    return err; 
+    return err;
   }
 }
 
@@ -186,114 +186,114 @@ app.get('/review_images', (req, res) => {
     });
 });
 
- 
-  async function get_forecast(mountain_name){
-    var query = `select mountains.forecast_office as mtn_forecast_office,
+
+async function get_forecast(mountain_name) {
+  var query = `select mountains.forecast_office as mtn_forecast_office,
          mountains.grid_x as mtn_grid_x, mountains.grid_y as mtn_grid_y, forecasts.* from mountains
           left join forecasts
            on mountains.forecast_office = forecasts.forecast_office
             and mountains.grid_x = forecasts.grid_x
             and mountains.grid_y = forecasts.grid_y
           where mountain_name = $1 order by generation_time desc, period_number asc;`
-   
-    var values = [mountain_name];
 
-    try {
-      const data = await db.any(query, values); // This will be an array of forecast information for each upcoming period
+  var values = [mountain_name];
 
-        if (!data[0].generation_time){ // no previous observations for this zone
-          var diffInMs = Infinity;
+  try {
+    const data = await db.any(query, values); // This will be an array of forecast information for each upcoming period
+
+    if (!data[0].generation_time) { // no previous observations for this zone
+      var diffInMs = Infinity;
+    } else {
+      var generation_time = new Date(data[0].generation_time);
+      var current_time = new Date();
+      console.log(generation_time);
+      console.log(current_time);
+      var diffInMs = Math.abs(current_time.getTime() - generation_time.getTime());
+    }
+    if (diffInMs > 1000 * 60 * 60) {  // stored data is outdated, update it first
+      var grid_x = data[0].mtn_grid_x;
+      var grid_y = data[0].mtn_grid_y;
+      var forecast_office = data[0].mtn_forecast_office;  // https://api.weather.gov/gridpoints/TOP/31,80/forecast 
+      const results = await axios({
+        url: 'https://api.weather.gov/gridpoints/' + forecast_office + '/' + grid_x + ',' + grid_y + '/forecast',
+        method: 'GET'
+      });
+      // Now update forecasts table
+      var forecast = results.data.properties;
+      var generation_time = forecast.generatedAt;
+      var forecast_array = forecast.periods;
+
+      var values_str = ''
+      for (let i = 0; i < forecast_array.length; i++) {
+        period_forecast = forecast_array[i];
+        if ('number' in period_forecast) {
+          var period_number = period_forecast.number;
         } else {
-          var generation_time = new Date(data[0].generation_time);
-          var current_time = new Date();
-          console.log(generation_time);
-          console.log(current_time);
-          var diffInMs = Math.abs(current_time.getTime() - generation_time.getTime());
+          var period_number = null;
         }
-        if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
-          var grid_x = data[0].mtn_grid_x;
-          var grid_y = data[0].mtn_grid_y;
-          var forecast_office = data[0].mtn_forecast_office;  // https://api.weather.gov/gridpoints/TOP/31,80/forecast 
-          const results = await axios({  
-            url: 'https://api.weather.gov/gridpoints/' + forecast_office + '/' + grid_x + ',' + grid_y + '/forecast',
-            method: 'GET'
-          });
-            // Now update forecasts table
-            var forecast = results.data.properties;
-            var generation_time = forecast.generatedAt;
-            var forecast_array = forecast.periods;
-            
-            var values_str = ''
-            for (let i = 0; i < forecast_array.length; i++) {
-              period_forecast = forecast_array[i];
-            if ('number' in period_forecast){
-              var period_number = period_forecast.number;
-            } else {
-              var period_number = null;
-            }
-            if ('name' in period_forecast){
-              var period_name = period_forecast.name;
-            } else {
-              var period_name = null;
-            }
-            if ('temperature' in period_forecast){
-              var temperature = period_forecast.temperature;
-            } else {
-              var temperature = null;
-            }
-            if ('temperatureUnit' in period_forecast){
-              var temperatureUnit = period_forecast.temperatureUnit;
-            } else {
-              var temperatureUnit = null;
-            }
-            if ('windSpeed' in period_forecast){
-              var windSpeed = period_forecast.windSpeed;
-            } else {
-              var windSpeed = null;
-            }
-            if ('windDirection' in period_forecast){
-              var windDirection = period_forecast.windDirection;
-            } else {
-              var windDirection = null;
-            }
-            if ('icon' in period_forecast){
-              var icon = period_forecast.icon;
-            } else {
-              var icon = null;
-            }
-            if ('shortForecast' in period_forecast){
-              var shortForecast = period_forecast.shortForecast;
-            } else {
-              var shortForecast = null;
-            }
-            if ('probabilityOfPrecipitation' in period_forecast){
-              var probabilityOfPrecipitation = period_forecast.probabilityOfPrecipitation.value;
-            } else {
-              var probabilityOfPrecipitation = null;
-            }
-            values_str = values_str + `('${forecast_office}', ${grid_x}, ${grid_y}, '${generation_time}', ${period_number}, '${period_name}', '${temperatureUnit}',
+        if ('name' in period_forecast) {
+          var period_name = period_forecast.name;
+        } else {
+          var period_name = null;
+        }
+        if ('temperature' in period_forecast) {
+          var temperature = period_forecast.temperature;
+        } else {
+          var temperature = null;
+        }
+        if ('temperatureUnit' in period_forecast) {
+          var temperatureUnit = period_forecast.temperatureUnit;
+        } else {
+          var temperatureUnit = null;
+        }
+        if ('windSpeed' in period_forecast) {
+          var windSpeed = period_forecast.windSpeed;
+        } else {
+          var windSpeed = null;
+        }
+        if ('windDirection' in period_forecast) {
+          var windDirection = period_forecast.windDirection;
+        } else {
+          var windDirection = null;
+        }
+        if ('icon' in period_forecast) {
+          var icon = period_forecast.icon;
+        } else {
+          var icon = null;
+        }
+        if ('shortForecast' in period_forecast) {
+          var shortForecast = period_forecast.shortForecast;
+        } else {
+          var shortForecast = null;
+        }
+        if ('probabilityOfPrecipitation' in period_forecast) {
+          var probabilityOfPrecipitation = period_forecast.probabilityOfPrecipitation.value;
+        } else {
+          var probabilityOfPrecipitation = null;
+        }
+        values_str = values_str + `('${forecast_office}', ${grid_x}, ${grid_y}, '${generation_time}', ${period_number}, '${period_name}', '${temperatureUnit}',
             ${temperature}, '${windSpeed}', '${windDirection}', '${icon}', '${shortForecast}', ${probabilityOfPrecipitation})`
-            if (i < forecast_array.length - 1){
-              values_str = values_str + ','
-            }
-          }
-  
-          // Delete all old data for this location and insert new forecast
-          var query = `DELETE from forecasts where forecast_office = $1 and grid_x = $2 and grid_y = $3;
+        if (i < forecast_array.length - 1) {
+          values_str = values_str + ','
+        }
+      }
+
+      // Delete all old data for this location and insert new forecast
+      var query = `DELETE from forecasts where forecast_office = $1 and grid_x = $2 and grid_y = $3;
              INSERT INTO forecasts
             (forecast_office, grid_x, grid_y, generation_time, period_number, period_name, temperatureUnit,
             temperature, windSpeed, windDirection, icon, shortForecast, probabilityOfPrecipitation)
            VALUES ` + values_str + ` returning *`
-           values = [forecast_office, grid_x, grid_y];
-        const insertedData = db.any(query, values);
-          return {data: insertedData};
-        } else {  // stored weather data in db is up to date, return it
-          return {data: data};
-        }
-      } catch(err) {
-        return {error: err};
-    };
-  }
+      values = [forecast_office, grid_x, grid_y];
+      const insertedData = db.any(query, values);
+      return { data: insertedData };
+    } else {  // stored weather data in db is up to date, return it
+      return { data: data };
+    }
+  } catch (err) {
+    return { error: err };
+  };
+}
 
 async function getWeatherData(nws_zone) {
   // This function gets weather data from our db or from NWS api if cached data is too old.
@@ -303,7 +303,7 @@ async function getWeatherData(nws_zone) {
   try {
     const data = await db.oneOrNone(query, values);
 
-    if (!data){ // no previous observations for this zone
+    if (!data) { // no previous observations for this zone
       var diffInMs = Infinity;
     } else {
       var observation_time = new Date(data.observation_time);
@@ -313,7 +313,7 @@ async function getWeatherData(nws_zone) {
       var diffInMs = Math.abs(current_time.getTime() - observation_time.getTime());
     }
 
-    if (diffInMs > 1000*60*60){  // stored data is outdated, update it first
+    if (diffInMs > 1000 * 60 * 60) {  // stored data is outdated, update it first
       const results = await axios({
         url: 'https://api.weather.gov/zones/forecast/' + nws_zone + '/observations?limit=1',
         method: 'GET'
@@ -322,63 +322,63 @@ async function getWeatherData(nws_zone) {
       var observation = results.data.features[0].properties;
       var time = observation.timestamp;
 
-      if ('temperature' in observation){
+      if ('temperature' in observation) {
         var temperature = cToF(observation.temperature.value);
 
       } else {
         var temperature = null;
       }
-      if ('windSpeed' in observation){
+      if ('windSpeed' in observation) {
         var wind_speed = kmhToMph(observation.windSpeed.value);
       } else {
         var wind_speed = null;
       }
-      if ('windGust' in observation){
+      if ('windGust' in observation) {
         var wind_gust = kmhToMph(observation.windGust.value);
       } else {
         var wind_gust = null;
       }
-      if ('windDirection' in observation){
+      if ('windDirection' in observation) {
         var wind_direction = observation.windDirection.value;
       } else {
         var wind_direction = null;
       }
-      if ('barometricPressure' in observation){
-        var pressure = Math.round(observation.barometricPressure.value/100);
+      if ('barometricPressure' in observation) {
+        var pressure = Math.round(observation.barometricPressure.value / 100);
       } else {
         var pressure = null;
       }
-      if ('relativeHumidity' in observation){
+      if ('relativeHumidity' in observation) {
         var humidity = observation.relativeHumidity.value;
       } else {
         var humidity = null;
       }
-      if ('textDescription' in observation){
+      if ('textDescription' in observation) {
         var description = observation.textDescription;
       } else {
         var description = null;
       }
-      if ('minTemperatureLast24Hours' in observation && observation.minTemperatureLast24Hours && observation.minTemperatureLast24Hours.value !== null){
+      if ('minTemperatureLast24Hours' in observation && observation.minTemperatureLast24Hours && observation.minTemperatureLast24Hours.value !== null) {
         var min_temp = cToF(observation.minTemperatureLast24Hours.value);
       } else {
         var min_temp = null;
       }
-      if ('maxTemperatureLast24Hours' in observation && observation.maxemperatureLast24Hours && observation.maxTemperatureLast24Hours.value !== null){
+      if ('maxTemperatureLast24Hours' in observation && observation.maxemperatureLast24Hours && observation.maxTemperatureLast24Hours.value !== null) {
         var max_temp = cToF(observation.maxTemperatureLast24Hours.value);
       } else {
         var max_temp = null;
       }
-      if ('precipitationLastHour' in observation){
+      if ('precipitationLastHour' in observation) {
         var prec_last_hour = mmToInches(observation.precipitationLastHour.value);
       } else {
         var prec_last_hour = null;
       }
-      if ('precipitationLast3Hours' in observation){
+      if ('precipitationLast3Hours' in observation) {
         var prec_last_3_hours = mmToInches(observation.precipitationLast3Hours.value);
       } else {
         var prec_last_3_hours = null;
       }
-      if ('precipitationLast6Hours' in observation){
+      if ('precipitationLast6Hours' in observation) {
         var prec_last_6_hours = mmToInches(observation.precipitationLast6Hours.value);
       } else {
         var prec_last_6_hours = null;
@@ -419,7 +419,7 @@ async function update_nws_points() {
   var mountain_id;
   var zone;
   var forecast_office;
-  var grid_x ;
+  var grid_x;
   var grid_y;
   var insert_query = `update mountains set nws_zone = $1, forecast_office = $2, grid_x = $3, grid_y = $4 where mountain_id = $5 returning *`
   var values;
@@ -428,7 +428,7 @@ async function update_nws_points() {
   var select_query = `select latitude, longitude, mountain_id from mountains`
   var mountain_data = await db.any(select_query);
 
-  for (let i=0; i<mountain_data.length; i++){
+  for (let i = 0; i < mountain_data.length; i++) {
     // Get data for ith mountain
     lat = mountain_data[i].latitude;
     long = mountain_data[i].longitude;
@@ -460,7 +460,7 @@ app.get('/welcome', (req, res) => {
 // -------------------------------------  ROUTES for register.hbs   ---------------------------------------
 
 app.get('/register', (req, res) => {
-  res.render('pages/register', {user: req.session.user});
+  res.render('pages/register', { user: req.session.user });
 });
 
 
@@ -494,14 +494,14 @@ app.post('/register', async (req, res) => {
           const insertQuery = 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)';
           db.none(insertQuery, [username, email, hash])
             .then(() => {
-              res.status(200).render('pages/login', {user: req.session.user, message: 'Account created.' });
+              res.status(200).render('pages/login', { user: req.session.user, message: 'Account created.' });
             })
             .catch((err) => {
               console.log(err);
               res.status(400).json({
                 error: err
               });
-              res.render('pages/register', {user: req.session.user, message: 'Error creating account.' });
+              res.render('pages/register', { user: req.session.user, message: 'Error creating account.' });
             });
         }
       })
@@ -520,7 +520,7 @@ app.post('/register', async (req, res) => {
 // -------------------------------------  ROUTES for login.hbs   ---------------------------------------
 
 app.get('/login', (req, res) => {
-  res.render('pages/login' ,{user: req.session.user});
+  res.render('pages/login', { user: req.session.user });
 });
 
 app.post('/login', async (req, res) => {
@@ -541,7 +541,7 @@ app.post('/login', async (req, res) => {
         res.status(200)
       } else {
         //console.log('Password is incorrect');
-        res.render('pages/login', { user: req.session.user, message: 'Password is incorrect' }); 
+        res.render('pages/login', { user: req.session.user, message: 'Password is incorrect' });
       }
       message: "Successfully logged in";
     })
@@ -559,14 +559,14 @@ app.get('/mountain/:id', async (req, res) => {
   const passesQuery = `SELECT passes.pass_name FROM passes
 JOIN mountains_to_passes ON passes.pass_id = mountains_to_passes.pass_id
 WHERE mountains_to_passes.mountain_id = $1;`
-  const reviewQuery =`SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
+  const reviewQuery = `SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
   JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
   JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
   LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
   LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
   WHERE mountains.mountain_id = $1
   ORDER BY reviews.date_posted DESC;`;
-  
+
   db.oneOrNone(query, [mountainId])
     .then(async (mountain) => {
       if (mountain) {
@@ -576,10 +576,10 @@ WHERE mountains_to_passes.mountain_id = $1;`
         ]);
         const weather_response = await getWeatherData(mountain.nws_zone);
         const weather_observations = weather_response.data != null ? weather_response.data : {
-          humidity:null,
-          barometricPressure : null,
-          temperature:null,
-          humidity:null,
+          humidity: null,
+          barometricPressure: null,
+          temperature: null,
+          humidity: null,
           max_temp_last_24_hours: null,
           min_temp_last_24_hours: null,
           precipitation_last_hour: null,
@@ -589,7 +589,7 @@ WHERE mountains_to_passes.mountain_id = $1;`
           wind_gust: null,
           wind_direction: null
         };
-        
+
         if (weather_observations.humidity != null) {
           weather_observations.humidity = Math.round(weather_observations.humidity);
         }
@@ -606,7 +606,7 @@ WHERE mountains_to_passes.mountain_id = $1;`
           'wind_gust',
           'wind_direction'
         ];
-        
+
         fieldsToCheck.forEach(field => {
           if (weather_observations[field] == null) {
             weather_observations[field] = '--(Not found)--';
@@ -623,15 +623,15 @@ WHERE mountains_to_passes.mountain_id = $1;`
           avg_rating: mountain.avg_rating,
           peak_elevation: mountain.peak_elevation,
           reviews: reviews,
-          apiKey : process.env.GOOGLE_MAPS_API_KEY,
-          nws_zone : mountain.nws_zone,
+          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+          nws_zone: mountain.nws_zone,
           passes: passString,
           currentObservations: weather_observations,
           periods: forecast,
           message: messageIN,
           mountain_image: mountain.mountain_image
         });
-        
+
       } else {
         res.render('pages/mountain', {
           user: req.session.user,
@@ -676,7 +676,7 @@ app.get('/profile', (req, res) => {
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
   req.session.destroy(function (err) {
-    res.redirect('/' , {user: null});
+    res.redirect('/', { user: null });
   });
 });
 
@@ -685,7 +685,7 @@ app.get('/logout', (req, res) => {
 
 
 // Path for user to post a review of a mountain
-app.post('/mountain/:id', upload.single('file') , async (req, res) => {
+app.post('/mountain/:id', upload.single('file'), async (req, res) => {
   const mountainId = req.params.id;
   const username = req.session.user.username;
   const review = req.body.review;
@@ -711,7 +711,7 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
   db.one(insertReviewQuery, [username, review, date_posted, rating])
     .then((result) => {
       const reviewId = result.review_id;
-      
+
       //insert into image table
       db.one(insertImageQuery, [filePath, image_cap])
         .then((result) => {
@@ -734,7 +734,7 @@ app.post('/mountain/:id', upload.single('file') , async (req, res) => {
     .catch((err) => {
       console.log(err);
       res.redirect(`/mountain/${mountainId}?message=Error+posting+review`);
-  
+
     });
 });
 
