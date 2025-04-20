@@ -182,6 +182,35 @@ app.get('/review_images', (req, res) => {
     });
 });
 
+async function updateAvg_Review(mountainID) {
+  try {
+    const res = await db.query(`
+      SELECT reviews.rating
+      FROM reviews
+      JOIN mountains_to_reviews ON reviews.review_id = mountains_to_reviews.review_id
+      WHERE mountains_to_reviews.mountain_id = $1
+    `, [mountainID]);
+    let avgRating;
+
+    if (res.length === 0) {
+      avgRating = 0;
+      console.log(`No reviews found for mountain_id ${mountainID}. Setting avg_rating to 0.`);
+    } else {
+      const ratings = res.map(row => parseFloat(row.rating));
+      avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
+    }
+    await db.query(`
+      UPDATE mountains
+      SET avg_rating = $1
+      WHERE mountain_id = $2
+    `, [avgRating.toFixed(2), mountainID]);
+
+    
+  } catch (err) {
+    console.error('Update avg rating failed:', err);
+  }
+}
+
 
 async function get_forecast(mountain_name) {
   var query = `select mountains.forecast_office as mtn_forecast_office,
@@ -445,7 +474,7 @@ async function update_nws_points() {
     values = [zone, forecast_office, grid_x, grid_y, mountain_id];
 
     var inserted = await db.one(insert_query, values);
-    console.log(inserted);
+    //console.log(inserted);
   }
 }
 
@@ -572,7 +601,7 @@ WHERE mountains_to_passes.mountain_id = $1;`
         ]);
         const forecast = await get_forecast(mountain.mountain_name);
         const periods = forecast.data;
-        console.log(periods);
+        //console.log(periods);
 
         const weather_response = await getWeatherData(mountain.nws_zone);
         const weather_observations = weather_response.data != null ? weather_response.data : {
@@ -699,7 +728,6 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
     VALUES($1, $2, $3, $4) 
     RETURNING review_id
   `;
-
   const insertImageQuery = `
     INSERT INTO images(image_url, image_cap) 
     VALUES($1, $2) 
@@ -709,24 +737,25 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
   const insertImageToReview = `INSERT INTO reviews_to_images(review_id, image_id) VALUES ($1, $2)`;
 
   db.one(insertReviewQuery, [username, review, date_posted, rating])
-    .then((result) => {
+    .then(async (result) => {
       const reviewId = result.review_id;
-
-      //insert into image table
-      db.one(insertImageQuery, [filePath, image_cap])
-        .then((result) => {
-          const imageID = result.image_id;
-          //link review id to image id
-          db.none(insertImageToReview, [reviewId, imageID]);
-        })
-
+      if(filePath != null){
+        //insert into image table
+        db.one(insertImageQuery, [filePath, image_cap])
+          .then((result) => {
+            const imageID = result.image_id;
+            //link review id to image id
+            db.none(insertImageToReview, [reviewId, imageID]);
+          })
+      }
       // Link the review to the mountain in the mountains_to_reviews table
       const linkReviewQuery = `
         INSERT INTO mountains_to_reviews(mountain_id, review_id) 
         VALUES($1, $2)
       `;
-
-      return db.none(linkReviewQuery, [mountainId, reviewId]);
+      
+      await db.none(linkReviewQuery, [mountainId, reviewId]);
+      updateAvg_Review(mountainId);
     })
     .then(() => {
       res.redirect(`/mountain/${mountainId}?message=Review+posted+successfully`);
