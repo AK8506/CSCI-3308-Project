@@ -281,7 +281,7 @@ async function get_forecast(mountain_name) {
             temperature, windSpeed, windDirection, icon, shortForecast, probabilityOfPrecipitation)
            VALUES ` + values_str + ` returning *`
       values = [forecast_office, grid_x, grid_y];
-      const insertedData = db.any(query, values);
+      const insertedData = await db.any(query, values);
       return { data: insertedData };
     } else {  // stored weather data in db is up to date, return it
       return { data: data };
@@ -359,7 +359,7 @@ async function getWeatherData(nws_zone) {
       } else {
         var min_temp = null;
       }
-      if ('maxTemperatureLast24Hours' in observation && observation.maxemperatureLast24Hours && observation.maxTemperatureLast24Hours.value !== null) {
+      if ('maxTemperatureLast24Hours' in observation && observation.maxTemperatureLast24Hours && observation.maxTemperatureLast24Hours.value !== null) {
         var max_temp = cToF(observation.maxTemperatureLast24Hours.value);
       } else {
         var max_temp = null;
