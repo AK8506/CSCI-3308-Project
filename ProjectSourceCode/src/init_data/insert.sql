@@ -32,34 +32,34 @@ INSERT INTO mountains
         'TestMT2', 'Testing City2', 36.01, -106.7, 4.2, 15000, 'https://t4.ftcdn.net/jpg/01/30/24/67/360_F_130246761_XVWbg4AGgGu7SlcKi2QPR23J03U710mP.jpg'
     ),
     (
-        'Aspen Mountain', 'Aspen', 39.1875, -106.8167, 0, 11212
+        'Aspen Mountain', 'Aspen', 39.1875, -106.8167, 0, 11212, NULL
     ),
     (
-        'Breckenridge', 'Breckenridge', 39.4817, -106.0384, 0, 12998
+        'Breckenridge', 'Breckenridge', 39.4817, -106.0384, 0, 12998, NULL
     ),
     (
-        'Vail', 'Vail', 39.6403, -106.3742, 0, 11570
+        'Vail', 'Vail', 39.6403, -106.3742, 0, 11570, NULL
     ),
     (
-        'Keystone', 'Keystone', 39.5792, -105.9347, 0, 12408
+        'Keystone', 'Keystone', 39.5792, -105.9347, 0, 12408, NULL
     ),
     (
-        'Copper Mountain', 'Copper Mountain', 39.5022, -106.1511, 0, 12313
+        'Copper Mountain', 'Copper Mountain', 39.5022, -106.1511, 0, 12313, NULL
     ),
     (
-        'Steamboat', 'Steamboat Springs', 40.4850, -106.8317, 0, 10568
+        'Steamboat', 'Steamboat Springs', 40.4850, -106.8317, 0, 10568, NULL
     ),
     (
-        'Telluride', 'Telluride', 37.9375, -107.8123, 0, 13150
+        'Telluride', 'Telluride', 37.9375, -107.8123, 0, 13150, NULL
     ),
     (
-        'Winter Park', 'Winter Park', 39.8917, -105.7631, 0, 12060
+        'Winter Park', 'Winter Park', 39.8917, -105.7631, 0, 12060, NULL
     ),
     (
-        'Crested Butte', 'Crested Butte', 38.8990, -106.9659, 0, 12162
+        'Crested Butte', 'Crested Butte', 38.8990, -106.9659, 0, 12162, NULL
     ),
     (
-        'Arapahoe Basin', 'Dillon', 39.6425, -105.8719, 0, 13050
+        'Arapahoe Basin', 'Dillon', 39.6425, -105.8719, 0, 13050, NULL
     );
 
 INSERT INTO images
