@@ -120,19 +120,45 @@ function kmhToMph(kmh) {
 }
 
 app.get('/', async (req, res) => {
-  mountainsReal = await get_HomePage_Mountains();
+  const search_query = req.query.query || ''; // Pull query from URL param
+  const validRatings = ['All Ratings', '1+ Star', '2+ Stars', '3+ Stars', '4+ Stars', '5 Stars'];
+  const rating_filter = validRatings.includes(req.query.rating) ? req.query.rating : 'All Ratings'; // Validate rating filter
+  const mountainsReal = await get_HomePage_Mountains(search_query, rating_filter);
 
   res.render('pages/home', {
     mountains: mountainsReal,
     user: req.session.user,
+    search_query: search_query,
+    rating_filter: rating_filter
   });
 });
 
-async function get_HomePage_Mountains() {
-  const query = `SELECT * FROM mountains LIMIT 20`;
+async function get_HomePage_Mountains(search_query = '', rating_filter = 'All Ratings') {
+  // Convert rating filter to a number
+  const ratingMap = {
+    '1+ Star': 1,
+    '2+ Stars': 2,
+    '3+ Stars': 3,
+    '4+ Stars': 4,
+    '5 Stars': 5,
+    'All Ratings': 0
+  };
+  const rating_number = ratingMap[rating_filter];
+
+  let query, values;
+
+  if (search_query.trim() === '') {
+    // Search by star rating only
+    query = 'SELECT * FROM mountains WHERE avg_rating >= $1 ORDER BY avg_rating DESC';
+    values = [rating_number];
+  } else {
+    // Search by name and star rating
+    query = 'SELECT * FROM mountains WHERE mountain_name ILIKE $1 AND avg_rating >= $2 ORDER BY avg_rating DESC';
+    values = [`%${search_query}%`, rating_number];
+  }
 
   try {
-    const data = await db.any(query);
+    const data = await db.any(query, values);
     return data;
   } catch (err) {
     console.error("Error getting mountains:", err);
@@ -166,7 +192,7 @@ async function getAvg_snow_rating(mountainID) {
       WHERE mountain_id = $2
     `, [avg_snow.toFixed(2), mountainID]);
 
-      return avg_snow.toFixed(2);
+    return avg_snow.toFixed(2);
   } catch (err) {
     console.error('Update avg rating failed:', err);
   }
@@ -673,9 +699,9 @@ WHERE mountains_to_passes.mountain_id = $1;`
           periods: periods,
           message: messageIN,
           mountain_image: mountain.mountain_image,
-          mountain_snow_rating : await getAvg_snow_rating(mountain.mountain_id),
+          mountain_snow_rating: await getAvg_snow_rating(mountain.mountain_id),
           avg_difficulty: mountain.avg_difficulty,
-          avg_lifts_infrastructure : mountain.avg_lift_infrastructure
+          avg_lifts_infrastructure: mountain.avg_lift_infrastructure
         });
 
       } else {
@@ -826,7 +852,7 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
       const reviewId = result.review_id;
 
       //insert into image table
-      if(filePath != null){
+      if (filePath != null) {
         //insert into image table
         db.one(insertImageQuery, [filePath, image_cap])
           .then((result) => {
@@ -858,10 +884,11 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 if (require.main === module) {
-  app.listen(3000, () => {console.log('Server running');
+  app.listen(3000, () => {
+    console.log('Server running');
     cron.schedule('15 4 * * 1', async () => {
       update_nws_points();
-     });
+    });
   });
 }
 module.exports = { app, db };
