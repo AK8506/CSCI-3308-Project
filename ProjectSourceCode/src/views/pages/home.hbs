@@ -19,16 +19,30 @@
     </h1>
   </div>
 
-  {{!-- SEARCH BAR --}}
+  {{!-- FILTER + SEARCH BAR --}}
   <div class="d-flex justify-content-center my-4">
-    <form class="d-flex" action="/" method="GET" style="max-width: 600px; width: 100%;">
+
+    <form class="d-flex align-items-center" action="/" method="GET" style="max-width: 800px; width: 100%;">
+      {{!-- Search bar --}}
       <input class="form-control me-2" type="search" placeholder="Search for mountains..." name="query"
-        id="search_query">
-      <button class="btn btn-outline-dark" type="submit">Search</button>
+        id="search_query" style="flex: 2;">
+
+      {{!-- Filter --}}
+      {{!-- <label for="rating_filter" class="me-2">Filter by Rating:</label> --}}
+      <select class="form-select form-select-sm me-2" name="rating" id="rating_filter"
+        style="max-width: 200px; flex: 1;">
+        <option value="All Ratings" selected>All Ratings</option>
+        <option value="5 Stars">5 Stars</option>
+        <option value="4+ Stars">4+ Stars</option>
+        <option value="3+ Stars">3+ Stars</option>
+        <option value="2+ Stars">2+ Stars</option>
+        <option value="1+ Star">1+ Star</option>
+      </select>
+
+      <button class="btn btn-outline-dark" type="submit" style="flex: 1;">Search with Filter</button>
     </form>
   </div>
 
-  {{!-- Filter --}}
 
   <div class="container my-5">
     <div class="row row-cols-1 row-cols-md-2 g-4">

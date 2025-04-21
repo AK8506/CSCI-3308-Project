@@ -121,26 +121,44 @@ function kmhToMph(kmh) {
 
 app.get('/', async (req, res) => {
   const search_query = req.query.query || ''; // Pull query from URL param
-  const mountainsReal = await get_HomePage_Mountains(search_query);
+  const validRatings = ['All Ratings', '1+ Star', '2+ Stars', '3+ Stars', '4+ Stars', '5 Stars'];
+  const rating_filter = validRatings.includes(req.query.rating) ? req.query.rating : 'All Ratings'; // Validate rating filter
+  const mountainsReal = await get_HomePage_Mountains(search_query, rating_filter);
 
   res.render('pages/home', {
     mountains: mountainsReal,
-    user: req.session.user
+    user: req.session.user,
+    search_query: search_query,
+    rating_filter: rating_filter
   });
 });
 
+async function get_HomePage_Mountains(search_query = '', rating_filter = 'All Ratings') {
+  // Convert rating filter to a number
+  const ratingMap = {
+    '1+ Star': 1,
+    '2+ Stars': 2,
+    '3+ Stars': 3,
+    '4+ Stars': 4,
+    '5 Stars': 5,
+    'All Ratings': 0
+  };
+  const rating_number = ratingMap[rating_filter];
 
-async function get_HomePage_Mountains(search_query = '') {
-  let query;
+  let query, values;
 
   if (search_query.trim() === '') {
-    query = `SELECT * FROM mountains LIMIT 20`;
+    // Search by star rating only
+    query = 'SELECT * FROM mountains WHERE avg_rating >= $1 ORDER BY avg_rating DESC';
+    values = [rating_number];
   } else {
-    query = `SELECT * FROM mountains WHERE mountain_name ILIKE $1 LIMIT 20`;
+    // Search by name and star rating
+    query = 'SELECT * FROM mountains WHERE mountain_name ILIKE $1 AND avg_rating >= $2 ORDER BY avg_rating DESC';
+    values = [`%${search_query}%`, rating_number];
   }
 
   try {
-    const data = await db.any(query, [`%${search_query}%`]);
+    const data = await db.any(query, values);
     return data;
   } catch (err) {
     console.error("Error getting mountains:", err);
