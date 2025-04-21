@@ -120,19 +120,27 @@ function kmhToMph(kmh) {
 }
 
 app.get('/', async (req, res) => {
-  mountainsReal = await get_HomePage_Mountains();
+  const search_query = req.query.query || ''; // Pull query from URL param
+  const mountainsReal = await get_HomePage_Mountains(search_query);
 
   res.render('pages/home', {
     mountains: mountainsReal,
-    user: req.session.user,
+    user: req.session.user
   });
 });
 
-async function get_HomePage_Mountains() {
-  const query = `SELECT * FROM mountains LIMIT 20`;
+
+async function get_HomePage_Mountains(search_query = '') {
+  let query;
+
+  if (search_query.trim() === '') {
+    query = `SELECT * FROM mountains LIMIT 20`;
+  } else {
+    query = `SELECT * FROM mountains WHERE mountain_name ILIKE $1 LIMIT 20`;
+  }
 
   try {
-    const data = await db.any(query);
+    const data = await db.any(query, [`%${search_query}%`]);
     return data;
   } catch (err) {
     console.error("Error getting mountains:", err);
@@ -206,7 +214,7 @@ async function getAvg_snow_rating(mountainID) {
       WHERE mountain_id = $2
     `, [avg_snow.toFixed(2), mountainID]);
 
-      return avg_snow.toFixed(2);
+    return avg_snow.toFixed(2);
   } catch (err) {
     console.error('Update avg rating failed:', err);
   }
@@ -705,9 +713,9 @@ WHERE mountains_to_passes.mountain_id = $1;`
           periods: periods,
           message: messageIN,
           mountain_image: mountain.mountain_image,
-          mountain_snow_rating : await getAvg_snow_rating(mountain.mountain_id),
+          mountain_snow_rating: await getAvg_snow_rating(mountain.mountain_id),
           avg_difficulty: mountain.avg_difficulty,
-          avg_lifts_infrastructure : mountain.avg_lift_infrastructure
+          avg_lifts_infrastructure: mountain.avg_lift_infrastructure
         });
 
       } else {
@@ -794,7 +802,7 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
       const reviewId = result.review_id;
 
       //insert into image table
-      if(filePath != null){
+      if (filePath != null) {
         //insert into image table
         db.one(insertImageQuery, [filePath, image_cap])
           .then((result) => {
@@ -825,10 +833,11 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
 
 // -------------------------------------  START THE SERVER   ---------------------------------------
 if (require.main === module) {
-  app.listen(3000, () => {console.log('Server running');
+  app.listen(3000, () => {
+    console.log('Server running');
     cron.schedule('15 4 * * 1', async () => {
       update_nws_points();
-     });
+    });
   });
 }
 module.exports = { app, db };
