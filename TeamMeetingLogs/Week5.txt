@@ -1,0 +1,21 @@
+Week 5 Meeting Notes:
+
+Scribe: Lance Kluge
+
+What do we want to do for the rest of the time that we have before the project is do?
+
+More testing, focus on not so much Logic based features just doing ones that are cosmetic to not induce any more bugs
+
+Slides are coming along, we went over requirements that we needed for the slides different ratings.
+
+Project we need user acceptance testing. Then we talk about needing to get the project completely done by Tuesday night. That way we can demo and squash any last minute bugs we encounter. 
+
+Comments on the slides to get a census on what everyone who used a tool would rate that specific tool. Then we come together and average. 
+
+Do we have to do a readme?
+Yes the requirements are on the project description. 
+
+Akshay start on the readme, Lance on Project Slides and Report, need to read over project requirements. Julia had been working on the slides. 
+
+Came to an agreement that we would have presentation practice at noon on Wednesday online.
+
