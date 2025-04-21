@@ -1,0 +1,68 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{mountain_name}}</title>
+    <script src="/src/views/pages/stars.js"></script>
+</head>
+
+<body>
+    <h1>{{user.username}}'s Reviews</h1>
+    
+    {{#if reviews.length}}
+        <div class="container mt-4">
+            <div class="card" style="max-height: 600px; overflow-y: auto;">
+                <div class="card-body">
+                {{#each reviews}}
+                    <div class="mb-5 border-bottom pb-4">
+
+                    <div class="mb-2">
+                        <h6 class="mb-0">{{username}}</h6>
+                        <small class="text-muted">{{date_posted}}</small>
+                        <p class="mt-1"><strong>Mountain:</strong> {{mountain_name}}</p>
+                        <div id="review-{{review_id}}" style="padding: 10px 5px;"></div>
+                        <script>
+                        var reviewId = "review-{{review_id}}";
+                        var rating = {{rating}};
+                        setStarRating_med(rating, reviewId);
+                        </script>
+                    </div>
+
+                    <div class="d-flex flex-wrap">
+                        <div class="flex-grow-1">
+                        <p class="mb-0">{{review}}</p>
+                        <p><strong>Snow Quality:</strong> {{snow_quality}}/5</p>
+                        <p><strong>Lift Infrastructure:</strong> {{lift_infrastructure}}/5</p>
+                        <p><strong>Difficulty:</strong> {{difficulty}}/5</p>
+
+                        <form method="POST" action="/delete_review" onsubmit="return confirmDelete();">
+                            <input type="hidden" name="review_id" value="{{review_id}}">
+                            <button type="submit" class="btn btn-danger btn-sm mt-2">Delete</button>
+                        </form>
+                        </div>
+
+                        {{#if image}}
+                        <div class="ms-4 mt-3 mt-md-0">
+                            <img src="{{image}}" alt="{{username}}'s image"
+                                class="rounded"
+                                style="width: 400px; height: 400px; object-fit: cover;">
+                        </div>
+                        {{/if}}
+                    </div>
+                    </div>
+                {{/each}}
+                </div>
+            </div>
+        </div>
+
+    {{else}}
+        <p>You haven’t posted any reviews yet.</p>
+    {{/if}}
+
+    <script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this review?");
+    }
+    </script>
+</body>
