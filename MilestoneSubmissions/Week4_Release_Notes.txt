@@ -1,0 +1,36 @@
+Date: 4/21/2025
+
+Contributors: Julia DiTomas, Lance Kluge, Akshay Patnaik, Josh Huang, Thomas Parameswaran 
+
+Week 4 Release Notes: 
+
+Features Completed:
+
+  - Ability to store images in database
+      Users can now upload images, or not with their review and that is stored in the db
+
+  - Create a card layout for the homepage
+      We now have a template style layout for the homepage in which we can display mountain info on
+
+  - Create a manage reviews area 
+      enables users to see their previous reviews and delete them if desired
+
+  - More attributes added to a review such as lift and infrastructure rating, difficulty, snow quality
+
+  - Updates avg ratings for snow quality, lift infrastructure, rating, and difficulty per mountain when review posted or deleted
+
+  - Adding 5+ real mountains with real data to database for testing
+
+  - Created a 'search by mountain name' and 'filter by star rating' option for users on the home page
+
+  - Initialize nws location data at app startup and update weekly
+
+  - Pass forecast data into mountain page so that forecast shows up in ind mountain page.
+
+  - Bug fix that user can upload a review without any image or caption.
+
+  - Deployed application on Render
+
+Rolling Over:
+
+  - General Bug Fixes/Cosmetic enhancements 
