@@ -141,46 +141,6 @@ async function get_HomePage_Mountains() {
 }
 
 
-app.get('/reviews', (req, res) => {
-  const mountain_name = req.query.mountain_name;
-  const query = `select * from reviews where review_id in 
-    (select review_id from mountains_to_reviews where mountain_id = 
-    (select mountain_id from mountains where mountain_name = $1))
-    order by date_posted desc;`
-
-  const values = [mountain_name];
-  db.any(query, values)
-    .then(data => {
-      res.status(200).json({
-        data: data,
-      });
-    })
-    .catch(err => {
-      res.status(400).json({
-        error: err,
-      });
-    });
-});
-
-
-app.get('/review_images', (req, res) => {
-  const review_id = req.query.review_id;
-  const query = `select * from images where image_id in 
-    (select image_id from reviews_to_images where review_id = $1)`
-
-  const values = [review_id];
-  db.any(query, values)
-    .then(data => {
-      res.status(200).json({
-        data: data,
-      });
-    })
-    .catch(err => {
-      res.status(400).json({
-        error: err,
-      });
-    });
-});
 
 async function getAvg_snow_rating(mountainID) {
   try {
@@ -232,11 +192,12 @@ async function updateAvg_Review(mountainID) {
       const ratings = res.map(row => parseFloat(row.rating));
       const difficulties = res.map(row => parseFloat(row.difficulty));
       const liftInfrastructures = res.map(row => parseFloat(row.lift_infrastructure));
-
+     
       avgRating = ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
       avgDifficulty = difficulties.reduce((sum, d) => sum + d, 0) / difficulties.length;
       avgLiftInfrastructure = liftInfrastructures.reduce((sum, l) => sum + l, 0) / liftInfrastructures.length;
     }
+
     await db.query(`
       UPDATE mountains
       SET avg_rating = $1,
@@ -646,7 +607,14 @@ WHERE mountains_to_passes.mountain_id = $1;`
           db.any(reviewQuery, [mountainId])
         ]);
         const forecast = await get_forecast(mountain.mountain_name);
-        const periods = forecast.data;
+        const periods = [];
+        if(forecast.data){
+          for (let i = 0; i < forecast.data.length && periods.length < 6; i += 2) {
+            periods.push([forecast.data[i], forecast.data[i + 1]]);
+          }
+        }
+        
+        
         //console.log(periods);
 
         const weather_response = await getWeatherData(mountain.nws_zone);
@@ -754,12 +722,76 @@ app.get('/profile', (req, res) => {
 // -------------------------------------  ROUTES for logout.hbs   ---------------------------------------
 app.get('/logout', (req, res) => {
   req.session.destroy(function (err) {
-    res.redirect('/', { user: null });
+    res.redirect('/');
   });
 });
 
 // -------------------------------------  ROUTES for mountain.hbs   ---------------------------------------
 
+app.get('/manage_reviews', async (req, res) => {
+  const reviewQuery = `SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image, mountains.mountain_name, reviews.snow_quality, reviews.difficulty, reviews.lift_infrastructure FROM mountains 
+  JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
+  JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
+  LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
+  LEFT JOIN images ON reviews_to_images.image_id = images.image_id 
+  WHERE reviews.username = $1
+  ORDER BY reviews.date_posted DESC;`;
+
+  db.any(reviewQuery, [req.session.user.username])
+    .then((reviews_all) => {
+      res.render('pages/manage_reviews', { user: req.session.user,
+        reviews: reviews_all
+      });
+    }).catch((err) => {
+      console.log(err);
+      res.render('pages/manage_reviews', {
+        user: req.session.user,
+        reviews: [],
+        message: 'Error getting reviews associated with account.'
+      });
+    });
+});
+
+app.post('/delete_review', (req, res) => {
+  const review_id = req.body.review_id;
+
+  db.one(`
+    SELECT 
+      mtr.mountain_id, 
+      rti.image_id 
+    FROM mountains_to_reviews mtr
+    LEFT JOIN reviews_to_images rti ON mtr.review_id = rti.review_id
+    WHERE mtr.review_id = $1
+  `, [review_id])
+    .then(data => {
+      const { mountain_id, image } = data;
+      // Delete from reviews_to_images 
+      return db.none('DELETE FROM reviews_to_images WHERE review_id = $1', [review_id])
+        .then(() => {
+          // Delete from mountains_to_reviews 
+          return db.none('DELETE FROM mountains_to_reviews WHERE review_id = $1', [review_id])
+            .then(() => {
+              //Delete the review itself
+              return db.none('DELETE FROM reviews WHERE review_id = $1', [review_id]);
+            })
+            .then(async () => {
+              // If  image exists delete
+              if (image) {
+                return db.none('DELETE FROM images WHERE image_id = $1', [image.image_id]);
+              }
+              await updateAvg_Review(mountain_id);
+            });
+        });
+    })
+    .then(async () => {
+      
+      res.redirect('/manage_reviews'); 
+    })
+    .catch(err => {
+      console.error('Error deleting review:', err);
+      res.status(500).send('An error occurred while deleting the review.');
+    });
+});
 
 
 // Path for user to post a review of a mountain
@@ -811,6 +843,7 @@ app.post('/mountain/:id', upload.single('file'), async (req, res) => {
       `;
 
       db.none(linkReviewQuery, [mountainId, reviewId]);
+      console.log("awaiting update Avg review")
       await updateAvg_Review(mountainId);
     })
     .then(() => {
