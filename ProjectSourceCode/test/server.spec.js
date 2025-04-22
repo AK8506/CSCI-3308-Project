@@ -144,4 +144,59 @@ describe('Testing Add User API', () => {
       });
     });
   });
+
+  describe('Testing /manage_reviews route without being logged in', () => {
+    it('should redirect to /login if user is not logged in', done => {
+      chai
+        .request(app)
+        .get('/manage_reviews')
+        .end((err, res) => {
+          res.should.have.status(200); // Expecting a redirect status code but 200 bc login
+          res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
+          done();
+        });
+    });
+  });
+
+  describe('Testing /mountain/:id post route without being logged in', () => {
+    it('should redirect to /login if user is not logged in', done => {
+      chai
+        .request(app)
+        .post('/mountain/')
+        .send({ mountain_id: 1, review: 'Great mountain!' })
+        .end((err, res) => {
+          res.should.have.status(200); // Expecting a redirect status code but 200 bc login
+          res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
+          done();
+        });
+    });
+  });
+
+  describe('Testing /delete_review post route without being logged in', () => {
+    it('should redirect to /login if user is not logged in', done => {
+      chai
+        .request(app)
+        .post('/delete_review')
+        .send({ review_id: 1})
+        .end((err, res) => {
+          res.should.have.status(200); // Expecting a redirect status code but 200 bc login
+          res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
+          done();
+        });
+    });
+  });
+
+  describe('Testing /logout route without being logged in', () => {
+    it('should redirect to /login if user is not logged in', done => {
+      chai
+        .request(app)
+        .get('/logout')
+        .send()
+        .end((err, res) => {
+          res.should.have.status(200); // Expecting a redirect status code but 200 bc login
+          res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/); // Expecting a redirect to /login with the mentioned Regex
+          done();
+        });
+    });
+  });
 // ********************************************************************************

@@ -68,6 +68,11 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/src/views/layouts',
   partialsDir: __dirname + '/src/views/partials',
+  helpers: {
+    displayOrNA: function (value) {
+      return (typeof value === 'string' && value.trim() !== '') ? value : 'N/A';
+    }
+  }
 });
 
 
@@ -118,6 +123,7 @@ function cToF(celsius) {
 function kmhToMph(kmh) {
   return Math.round(kmh * 0.621371 * 10) / 10;
 }
+
 
 app.get('/', async (req, res) => {
   const search_query = req.query.query || ''; // Pull query from URL param
@@ -617,7 +623,7 @@ app.get('/mountain/:id', async (req, res) => {
   const passesQuery = `SELECT passes.pass_name FROM passes
 JOIN mountains_to_passes ON passes.pass_id = mountains_to_passes.pass_id
 WHERE mountains_to_passes.mountain_id = $1;`
-  const reviewQuery = `SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, reviews.date_posted AS date_posted, images.image_url AS image FROM mountains 
+  const reviewQuery = `SELECT reviews.review_id, reviews.username, reviews.rating, reviews.review AS review, TO_CHAR(reviews.date_posted, 'FMMonth DD, YYYY') AS date_posted, images.image_url AS image FROM mountains 
   JOIN mountains_to_reviews ON mountains.mountain_id = mountains_to_reviews.mountain_id 
   JOIN reviews ON mountains_to_reviews.review_id = reviews.review_id 
   LEFT JOIN reviews_to_images ON reviews.review_id = reviews_to_images.review_id 
