@@ -7,6 +7,57 @@ It is for skiers and snowboarders who want to explore new mountains, to find the
 
 Unlike traditional review platforms with static information, Powder Junkie ensures users make informed decisions on the go and get the most out of the ski season.
 
+## Project Structure
+```
+.
+├── docker-compose.yaml
+├── .env                     ← Environment variables go here (not committed)
+├── .gitignore               ← Ensures .env and other sensitive files are ignored
+├── README.md
+├── MilestoneSubmissions/
+│   ├── 3308 Project Proposal.pdf
+│   ├── CSCI 3308 User Acceptance Testing.pdf
+│   ├── Week1.txt
+│   ├── Week2_Release_Notes
+│   ├── Week3_Release_Notes.txt
+│   └── Week4_Release_Notes.txt
+├── ProjectSourceCode/
+│   ├── index.js
+│   ├── node_modules/        ← Installed dependencies (auto-generated)
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src/
+│   │   ├── init_data/
+│   │   │   ├── create.sql
+│   │   │   └── insert.sql
+│   │   └── views/
+│   │       ├── layouts/
+│   │       │   └── main.hbs
+│   │       ├── pages/
+│   │       │   ├── home.hbs
+│   │       │   ├── login.hbs
+│   │       │   ├── logout.hbs
+│   │       │   ├── manage_reviews.hbs
+│   │       │   ├── map.js
+│   │       │   ├── mountain.hbs
+│   │       │   ├── register.hbs
+│   │       │   └── stars.js
+│   │       └── partials/
+│   │           ├── footer.hbs
+│   │           ├── header.hbs
+│   │           ├── message.hbs
+│   │           ├── nav.hbs
+│   │           └── navigation.hbs
+│   ├── test/
+│   │   └── server.spec.js
+│   └── uploads/
+└── TeamMeetingLogs/
+    ├── Week1.txt
+    ├── Week2.txt
+    ├── Week3.txt
+    ├── Week4.txt
+    └── Week5.txt
+```
 
 ## Contributors
 
